@@ -249,6 +249,42 @@ def quick(tmp: Path, results: list) -> None:
           "fight map, briefing and peer review rendered", results)
     check(d.get("downgraded") == ["Unsourced finding"], "unsourced 'high' finding downgraded to medium", results)
     check(d.get("dominant_perspective") == "practitioner", "bias check flags the dominant perspective", results)
+    lens_keys = ["practitioner", "skeptic", "economist", "historian", "academic", "legal", "justice", "global_south"]
+    def arg(k, n):
+        other = lens_keys[(lens_keys.index(k) + 1) % 8]
+        return {"claim": f"{k} claim {n}", "because": f"{k} grounds {n}", "needed": "supervisory data",
+                "holds_if": "assumption", "type": "precedent", "weak_point": "is 2022 like 2008?",
+                "objection": {"by": other, "text": "objection", "reply": "reply"}}
+    full = {"question": "Through banks or directly?", "date": "2024-01-02",
+            "perspectives": [{"key": k, "position": f"{k} answers", "arguments": [arg(k, n) for n in (1, 2, 3)]}
+                             for k in lens_keys],
+            "clashes": [{"between": ["legal", "economist"], "text": "Lawyer wins if the mandate is unclear"}],
+            "thesis": "Answer the Lawyer in 3.2", "examiner": ["Q?"],
+            "next": {"step": "Find the 2022 account", "why": "four lenses rest on it", "alternatives": ["map it"]},
+            "fight": {"agree": ["Data gaps"]}}
+    good = root / "sessions" / "2024-01-02-discuss-full.json"
+    good.write_text(json.dumps(full), encoding="utf-8")
+    g = run("build_discussion.py", str(good), "--root", str(root))
+    gpage = good.with_suffix(".html").read_text() if good.with_suffix(".html").exists() else ""
+    check(g.get("ok") is True and "checks" not in g and "vague" not in g,
+          "complete eight-lens discussion passes the checks", results)
+    check(all(t in gpage for t in ("The Lawyer", "Social justice", "The Global South", "Show full reasoning",
+                                    "Only holds if", "Argument map", "Recommended next step", 'id="filters"')),
+          "lenses, full reasoning, argument map and next step rendered", results)
+    thin = dict(full, perspectives=[
+        {"key": "practitioner", "position": "This is a complex issue with various factors.",
+         "arguments": [dict(arg("practitioner", 1), objection={"by": "practitioner", "text": "x"})]},
+        {"key": "legal", "position": "Legal view", "arguments": [{"claim": "Only a claim", "type": "vibes"}]}])
+    thin.pop("next")
+    bad = root / "sessions" / "2024-01-03-discuss-thin.json"
+    bad.write_text(json.dumps(thin), encoding="utf-8")
+    t = run("build_discussion.py", str(bad), "--root", str(root))
+    tc = " | ".join(t.get("checks") or [])
+    check(all(x in tc for x in ("missing lenses", "1 argument(s)", "another lens", "no reply",
+                                "unknown type 'vibes'", "missing because", "no recommended next step")),
+          "thin or malformed lenses are reported", results)
+    check({v["phrase"].lower() for v in t.get("vague") or []} >= {"various", "a complex issue"},
+          "vague wording in a discussion is flagged", results)
     padded = root / "drafts" / "style-bad.md"
     padded.write_text("## 3.1\n\nIn today's rapidly evolving landscape, it is important to note that funds play a "
                       "pivotal role. Moreover, regulators must navigate this. Furthermore, it is unprecedented.[^1]\n\n"

@@ -30,14 +30,16 @@ Nothing is saved until you say **go**, and every earlier version is kept.
 | `narrower research questions` | `/otto give me 3 narrower versions of my question` |
 | `save ideas [numbers]` | `/otto save ideas 2, 5 and 9` |
 
-### ⚖️ Discuss (your question through five lenses)
-🟦 Practitioner · 🟥 Skeptic · 🟩 Economist · 🟨 Historian · 🟪 Academic
+### ⚖️ Discuss (your question through eight lenses)
+🟦 Practitioner · 🟥 Skeptic · 🟩 Economist · 🟨 Historian · 🟪 Academic · 🔷 Lawyer · 🩷 Social justice · 🟧 Global South
+
+Each lens gives its position and 3–4 arguments. Tap a lens to hide it, or open **Show full reasoning** to see why each argument holds, what it assumes, its weak point and the strongest objection.
 
 | Step | Type | Example |
 |---|---|---|
 | 1 | `discuss [question]` | `/otto discuss whether the PRA should regulate LDI funds directly` |
-| 2 | `map where they fight` | contradictions, strongest/weakest evidence, agreement, blind spots |
-| 3 | `write the briefing` | supervisor summary, 5 findings ranked by reliability, one thing to change |
+| 2 | `map the arguments` | an argument map (reasons and objections for every lens), then contradictions, strongest/weakest evidence, agreement, blind spots |
+| 3 | `write the briefing` | supervisor summary, 6–8 findings ranked by reliability, one thing to change |
 | 4 | `grade your work` | 1–10 confidence per finding, weakest claim, bias check |
 | all | `discuss [question], all stages` | runs 1–4 in one go |
 

@@ -23,7 +23,7 @@ Defaults are set for a UK law student (LLM) writing on UK/EU bank regulation and
 |---|---|
 | `CLAUDE.md` | Project rules for Claude + the thesis brief template. Imports `thesis-brief.md`. |
 | `thesis-brief.md` | The student's filled brief (created at first run, git-ignored). |
-| `.claude/skills/otto/` | The skill: `SKILL.md` + `references/perspectives.md` (the five Discuss lenses and the schools-of-thought presets) and `references/citation-styles.md` (OSCOLA, APA 7, Harvard). |
+| `.claude/skills/otto/` | The skill: `SKILL.md` + `references/perspectives.md` (the eight Discuss lenses, the argument types and the schools-of-thought presets) and `references/citation-styles.md` (OSCOLA, APA 7, Harvard). |
 | `.claude/settings.json` | Pre-approved permissions so the student isn't flooded with prompts. |
 | `scripts/ingest.py` | PDF / scanned PDF / .docx / web page / text → page-marked, chapter-split markdown. |
 | `scripts/build_library.py` | `references/INDEX.md` → `library.html` (offline, searchable, with a gap panel). |
@@ -157,11 +157,11 @@ Open the **Claude** app, go to **Code**, and open your **otto** thesis folder. (
 ### The six things it does
 
 1. 💡 **Brainstorm**: ideas, angles, research questions and possible gaps. *"Brainstorm angles for chapter 3."*
-2. ⚖️ **Discuss**: your topic through five lenses: 🟦 the Practitioner, 🟥 the Skeptic, 🟩 the Economist, 🟨 the Historian and 🟪 the Academic. You see where they clash and what examiners might ask, shown as colour-coded cards right in the chat. Say *"save it as a page"* if you want a copy to keep or print. *"Discuss whether NBFIs should be regulated directly."* You can also say *"debate the Skeptic and the Historian"*, *"play the examiner"*, or *"use schools of thought instead"*.
+2. ⚖️ **Discuss**: your topic through eight lenses: 🟦 the Practitioner, 🟥 the Skeptic, 🟩 the Economist, 🟨 the Historian, 🟪 the Academic, 🔷 the Lawyer, 🩷 Social justice and 🟧 the Global South. Each gives its position and 3–4 arguments, shown as colour-coded cards right in the chat. Tap a lens to hide it, or open **Show full reasoning** to see, for every argument, what it rests on, what it assumes, its weak point and the strongest objection from another lens. You also see where they clash, what examiners might ask, and one recommended next step. Say *"save it as a page"* if you want a copy to keep or print. *"Discuss whether NBFIs should be regulated directly."* You can also say *"debate the Skeptic and the Historian"*, *"play the examiner"*, or *"use schools of thought instead"*.
 
    Then take it further, step by step (each step appears as new cards in the chat):
-   - ⚔️ *"Map where they fight"*: direct contradictions, the strongest and weakest evidence, what they all agree on, and what nobody addressed.
-   - 📋 *"Write the briefing"*: a one-paragraph summary for your supervisor, five key findings ranked by reliability, one hidden connection, and one thing to change in your thesis.
+   - 🗺️ *"Map the arguments"*: an argument map of every lens's reasons and objections, then direct contradictions, the strongest and weakest evidence, what they all agree on, and what nobody addressed.
+   - 📋 *"Write the briefing"*: a one-paragraph summary for your supervisor, 6–8 key findings ranked by reliability, one hidden connection, and one thing to change in your thesis.
    - 🔍 *"Grade your work"*: a 1–10 confidence score per finding, the weakest claim and how to fix it, and a bias check showing which lens dominated.
 3. ✍️ **Write**: turns **your** points into a draft, or polishes your own text. *"Here are my points for 3.2, draft it."* Before writing, Claude shows a short plan (one line per paragraph, with the sources it will use) and waits for you to say **go**. Every draft is saved as a new version, so nothing is lost, and opens beside the chat so you can read it while you talk. Drafts are written plainly and precisely, without AI-sounding filler, and each one ends with a short style check.
 4. 📚 **Library**: your sources. *"What do my sources say about liquidity mismatch?"*

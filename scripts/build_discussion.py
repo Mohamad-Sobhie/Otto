@@ -9,17 +9,28 @@ Input format:
   "question": "Should NBFI risk be regulated through banks or directly?",
   "date": "2026-10-31",                         (optional, default today)
   "intro": "one sentence",                      (optional)
-  "perspectives": [
-    {"key": "practitioner",                     practitioner|skeptic|economist|historian|academic
-                                                 or any other key with "name" and "tagline"
-     "position": "core position",
-     "evidence": [{"claim": "...", "source": "fsma-2023", "pinpoint": "s 25"},   library-backed
-                  {"claim": "...", "needed": "Bank of England data on LDI leverage"}],  gap
-     "only": "what only this perspective would say"}
-  ],
-  "clashes": [{"between": ["practitioner", "skeptic"], "text": "..."}],
+  "perspectives": [                            all eight lenses, in order (or 3-5 schools of thought)
+    {"key": "practitioner",                     practitioner|skeptic|economist|historian|academic|
+                                                 legal|justice|global_south, or any other key with
+                                                 "name" and "tagline" (schools of thought)
+     "position": "one sentence that answers the question",
+     "arguments": [                             3-4 per lens (5 at most)
+       {"claim": "one point",
+        "because": "the grounds",
+        "source": "fsma-2023", "pinpoint": "s 25",          library-backed, or instead:
+        "needed": "Bank of England account of 2022",       a gap (kind of source)
+        "holds_if": "the hidden assumption",
+        "type": "precedent",                    practical|assumption|consequences|precedent|expert|
+                                                 rule|principle|spillover|cause
+        "weak_point": "the critical question, made specific",
+        "objection": {"by": "legal", "text": "the objection", "reply": "the reply"}}
+     ]}
+  ],                                            (older records with "evidence" and "only" still render)
+  "clashes": [{"between": ["practitioner", "skeptic"], "text": "... who wins, on what condition"}],
   "thesis": "what this means for the thesis",
   "examiner": ["question 1", "question 2"],
+  "next": {"step": "the recommended next step", "why": "why these results point to it",
+           "alternatives": ["map the arguments", "play the examiner"]},
 
   "fight": {                                    stage 2 - "map where they fight" (optional)
     "contradictions": [{"between": ["skeptic", "practitioner"], "text": "..."}],
@@ -48,6 +59,12 @@ The review's perspective balance is computed here from the findings' "key" field
 on trust; a perspective behind 40%+ of the findings is flagged as dominant.
 A finding can only be rated "high" if at least one of its sources is in the library;
 otherwise it is shown as "medium" and reported in "downgraded".
+
+Structure problems are reported in "checks" (a default lens missing, a lens without a
+position, fewer than 3 or more than 5 arguments, an argument missing a part, an unknown
+type, an objection from a lens that isn't in the discussion). Vague or stock wording is
+reported in "vague" (same patterns as style_check.py, plus vague-discussion phrases).
+Both are prompts to fix the record and re-run before showing the cards.
 """
 from __future__ import annotations
 
@@ -59,13 +76,35 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from style_check import GRAND, INFLATED, STOCK  # noqa: E402  (same word lists as drafts)
+
+VAGUE_RE = None  # built lazily from style_check's lists + VAGUE_EXTRA
+
 PRESETS = {
     "practitioner": ("The Practitioner", "has done the job", "P"),
     "skeptic": ("The Skeptic", "doubts the consensus", "?"),
     "economist": ("The Economist", "follows the money", "£"),
     "historian": ("The Historian", "has seen this before", "H"),
     "academic": ("The Academic", "read the studies", "§"),
+    "legal": ("The Lawyer", "reads the rulebook", "⚖"),
+    "justice": ("Social justice", "asks who bears it", "J"),
+    "global_south": ("The Global South", "sees the spillover", "G"),
 }
+TYPES = {
+    "practical": "practical reasoning", "assumption": "attacking a shared assumption",
+    "consequences": "argument from consequences", "precedent": "precedent / analogy",
+    "expert": "expert evidence", "rule": "rule and authority", "principle": "principle and fairness",
+    "spillover": "spillover / exclusion", "cause": "cause to effect",
+}
+ARG_PARTS = ("claim", "because", "holds_if", "type", "weak_point", "objection")
+MIN_ARGS, MAX_ARGS = 3, 5
+VAGUE_EXTRA = [
+    r"various", r"a (?:number|range|variety) of", r"(?:some|many) (?:argue|experts|commentators|scholars|observers)",
+    r"it (?:can|could) be argued", r"to (?:some|a certain) extent", r"in many ways", r"(?:both|all) sides have",
+    r"(?:key|important|significant) (?:issues?|factors?|aspects?|considerations?)",
+    r"(?:a|an|this) complex (?:issue|question|area|topic)", r"it depends\.?$", r"(?:has|have) (?:its|their) merits",
+]
 ORDER = list(PRESETS)
 N_COLOURS = 8
 RELIABILITY = {"high": 0, "medium": 1, "low": 2}
@@ -216,12 +255,146 @@ def render_fight(f: dict, fallback_clashes: list, names: dict, colours: dict) ->
     return out
 
 
+def vague_phrases(text: str) -> list[str]:
+    global VAGUE_RE
+    if VAGUE_RE is None:
+        # "leverage" is a technical noun in finance discussions, so it is not flagged here
+        inflated = [w for w in INFLATED if "leverag" not in w]
+        VAGUE_RE = re.compile(r"\b(?:" + "|".join(STOCK + inflated + GRAND + VAGUE_EXTRA) + r")\b", re.I | re.M)
+    return [m.group(0) for m in VAGUE_RE.finditer(text or "")]
+
+
+def check_record(data: dict) -> tuple[list[str], list[dict]]:
+    """Structure checks and vague wording, as plain-language prompts for Otto to fix."""
+    checks: list[str] = []
+    vague: list[dict] = []
+    persp = data.get("perspectives") or []
+    keys = [p.get("key", "") for p in persp]
+    if keys and all(k in PRESETS for k in keys if k):  # default lenses (not schools of thought)
+        missing = [k for k in ORDER if k not in keys]
+        if missing:
+            checks.append("missing lenses: " + ", ".join(missing) + " (always show all eight)")
+
+    def scan(where: str, text) -> None:
+        for ph in vague_phrases(str(text or "")):
+            vague.append({"where": where, "phrase": ph})
+
+    for p in persp:
+        k = p.get("key", "?")
+        if not (p.get("position") or "").strip():
+            checks.append(f"{k}: no position")
+        scan(f"{k} position", p.get("position"))
+        args = p.get("arguments")
+        if args is None:
+            if p.get("evidence") is not None:
+                checks.append(f"{k}: uses the old 'evidence' format - rewrite as 'arguments'")
+            else:
+                checks.append(f"{k}: no arguments")
+            continue
+        if len(args) < MIN_ARGS:
+            checks.append(f"{k}: {len(args)} argument(s) - give {MIN_ARGS}-4, or say in the position why there are fewer")
+        if len(args) > MAX_ARGS:
+            checks.append(f"{k}: {len(args)} arguments - {MAX_ARGS} at most; keep the strongest")
+        for i, a in enumerate(args, start=1):
+            gaps = [part for part in ARG_PARTS if not a.get(part)]
+            if not (a.get("source") or a.get("needed")):
+                gaps.append("source or needed")
+            if gaps:
+                checks.append(f"{k} argument {i}: missing " + ", ".join(gaps))
+            if a.get("type") and a["type"] not in TYPES:
+                checks.append(f"{k} argument {i}: unknown type '{a['type']}' (use one of: {', '.join(TYPES)})")
+            ob = a.get("objection") or {}
+            if ob:
+                by = ob.get("by", "")
+                if by == k:
+                    checks.append(f"{k} argument {i}: the objection must come from another lens")
+                elif by and by not in keys:
+                    checks.append(f"{k} argument {i}: objection from '{by}', which isn't a lens in this discussion")
+                if not ob.get("reply"):
+                    checks.append(f"{k} argument {i}: objection has no reply (write 'no good reply yet' if so)")
+            for part in ("claim", "because", "holds_if", "weak_point"):
+                scan(f"{k} argument {i} {part}", a.get(part))
+            scan(f"{k} argument {i} objection", ob.get("text"))
+            scan(f"{k} argument {i} reply", ob.get("reply"))
+    for n, c in enumerate(data.get("clashes") or [], start=1):
+        scan(f"clash {n}", c.get("text"))
+    scan("thesis", data.get("thesis"))
+    if persp and not (data.get("next") or {}).get("step"):
+        checks.append("no recommended next step ('next')")
+    return checks, vague
+
+
+def source_tag(item: dict, ids: set[str], unknown: list[str]) -> str:
+    src = (item.get("source") or "").strip()
+    pin = (item.get("pinpoint") or "").strip()
+    if src and src in ids:
+        return f'<span class="src ok" title="In your library">{esc(src)}{", " + esc(pin) if pin else ""}</span>'
+    if src:
+        unknown.append(src)
+    need = "needs: " + item["needed"] if item.get("needed") else "source needed"
+    return f'<span class="src need" title="Not in your library yet">{esc(need)}</span>'
+
+
+def render_arguments(args: list, names: dict, colours: dict, ids: set[str], unknown: list[str]) -> str:
+    short = "".join(f"<li>{esc(a.get('claim'))}</li>" for a in args)
+    full = []
+    for i, a in enumerate(args, start=1):
+        ob = a.get("objection") or {}
+        by = ob.get("by", "")
+        rows = [("Because", f'{esc(a.get("because"))} {source_tag(a, ids, unknown)}'),
+                ("Only holds if", esc(a.get("holds_if"))),
+                ("Type", esc(TYPES.get(a.get("type", ""), a.get("type", "")))),
+                ("Weak point", esc(a.get("weak_point")))]
+        if ob:
+            rows.append(("Objection", f'{chip(by, names, colours)} {esc(ob.get("text"))}'))
+            rows.append(("Reply", esc(ob.get("reply"))))
+        full.append(f'<div class="arg"><div class="claim">{i}. {esc(a.get("claim"))}</div>'
+                    + "".join(f'<div class="part"><b>{t}</b><span>{v}</span></div>' for t, v in rows if v.strip())
+                    + "</div>")
+    return (f'<ol class="claims">{short}</ol>'
+            f'<details class="full"><summary>Show full reasoning</summary>{"".join(full)}</details>')
+
+
+def render_map(data: dict, names: dict, colours: dict) -> str:
+    nodes = []
+    for p in data.get("perspectives") or []:
+        k = p.get("key", "")
+        args = p.get("arguments") or []
+        if not args:
+            continue
+        inner = ""
+        for a in args:
+            inner += f'<div class="mp">{esc(a.get("claim"))}</div>'
+            ob = a.get("objection") or {}
+            if ob:
+                who = names.get(ob.get("by", ""), ob.get("by", "")).replace("The ", "")
+                inner += (f'<div class="mo"><b>{esc(who)}:</b> {esc(ob.get("text"))}'
+                          + (f' <span>→ {esc(ob.get("reply"))}</span>' if ob.get("reply") else "") + "</div>")
+        nodes.append(f'<div class="mn p{colours[k]}" data-k="{esc(k)}"><div class="mh">{esc(names[k].replace("The ", ""))}</div>'
+                     f'<p class="mpos">{esc(p.get("position"))}</p>{inner}</div>')
+    if not nodes:
+        return ""
+    return ('<h2>Argument map</h2>'
+            f'<div class="mq">{esc(data.get("question"))}</div><div class="mg">{"".join(nodes)}</div>'
+            '<p class="muted">Green: reasons · red: objections, named by the lens that raises them, with the reply.</p>')
+
+
+def render_next(n: dict) -> str:
+    if not n or not n.get("step"):
+        return ""
+    alts = " · ".join(esc(x) for x in n.get("alternatives") or [])
+    return ('<div class="callout act next"><div class="label plain">Recommended next step</div>'
+            f'<p><b>{esc(n["step"])}</b>' + (f' {esc(n["why"])}' if n.get("why") else "") + "</p>"
+            + (f'<p class="muted">Or: {alts}</p>' if alts else "") + "</div>")
+
+
 def render(data: dict, ids: set[str]) -> tuple[str, list[str], list[str]]:
     persp = data.get("perspectives") or []
     colours = colour_map(persp)
     names = {}
     unknown: list[str] = []
-    cards = []
+    cards: list = []  # two passes: objections name other lenses, so all names come first
+    card_html: list[str] = []
     for p in persp:
         key = p.get("key", "")
         name, tagline, icon = PRESETS.get(key, (p.get("name") or key.title(), "", (p.get("name") or key or "?")[:1].upper()))
@@ -229,29 +402,25 @@ def render(data: dict, ids: set[str]) -> tuple[str, list[str], list[str]]:
         tagline = p.get("tagline") or tagline
         icon = p.get("icon") or icon
         names[key] = name
-        items = []
-        for ev in p.get("evidence") or []:
-            src = (ev.get("source") or "").strip()
-            pin = (ev.get("pinpoint") or "").strip()
-            if src and src in ids:
-                tag = f'<span class="src ok" title="In your library">{esc(src)}{", " + esc(pin) if pin else ""}</span>'
-            else:
-                if src:
-                    unknown.append(src)
-                need = "needs: " + ev["needed"] if ev.get("needed") else "source needed"
-                tag = f'<span class="src need" title="Not in your library yet">{esc(need)}</span>'
-            items.append(f"<li>{esc(ev.get('claim'))} {tag}</li>")
+        cards.append((p, key, name, tagline, icon))
+    for p, key, name, tagline, icon in cards:
+        items = [f"<li>{esc(ev.get('claim'))} {source_tag(ev, ids, unknown)}</li>" for ev in p.get("evidence") or []]
         only = p.get("only")
-        cards.append(
-            f'<article class="card p{colours[key]}"><div class="head"><div class="icon">{esc(icon)}</div>'
+        args = p.get("arguments") or []
+        card_html.append(
+            f'<article class="card p{colours[key]}" data-k="{esc(key)}"><div class="head"><div class="icon">{esc(icon)}</div>'
             f'<div class="name">{esc(name)}</div><div class="tag">{esc(tagline)}</div></div>'
-            f'<div class="label">Core position</div><p>{esc(p.get("position"))}</p>'
+            f'<div class="label">Position</div><p>{esc(p.get("position"))}</p>'
+            + (f'<div class="label">Arguments</div>{render_arguments(args, names, colours, ids, unknown)}' if args else "")
             + (f'<div class="label">Strongest evidence</div><ul>{"".join(items)}</ul>' if items else "")
             + (f'<div class="only"><div class="label">Only they\'d say</div><p>{esc(only)}</p></div>' if only else "")
             + "</article>")
 
-    legend = "".join(f'<span class="p{colours[p.get("key", "")]}">{esc(names[p.get("key", "")].replace("The ", ""))}</span>'
-                     for p in persp)
+    legend = "".join(f'<button type="button" class="on p{colours[p.get("key", "")]}" data-k="{esc(p.get("key", ""))}">'
+                     f'{esc(names[p.get("key", "")].replace("The ", ""))}</button>' for p in persp)
+    if persp:
+        legend += '<button type="button" class="all">Expand all</button>'
+    amap = render_map(data, names, colours) if data.get("fight") else ""
     downgraded: list[str] = []
     review = data.get("review") or None
     briefing = render_briefing(data["briefing"], names, colours, ids, downgraded, review) if data.get("briefing") else ""
@@ -275,13 +444,14 @@ def render(data: dict, ids: set[str]) -> tuple[str, list[str], list[str]]:
     body = (
         f'<div class="kicker">Discuss · {esc(date_h)}</div><h1>{esc(data.get("question") or "Perspectives")}</h1>'
         + (f'<p class="lede">{esc(data["intro"])}</p>' if data.get("intro") else "")
-        + f'<div class="legend">{legend}</div>' + briefing
-        + ('<h2>The perspectives</h2>' if briefing else "") + "".join(cards) + fight
+        + f'<div class="legend" id="filters">{legend}</div>' + briefing
+        + ('<h2>The lenses</h2>' if briefing else "") + "".join(card_html) + amap + fight
         + (f'<h2>What this means for your thesis</h2><div class="box"><p>{esc(data["thesis"])}</p></div>' if data.get("thesis") else "")
         + (f'<h2>Likely examiner questions</h2><div class="box"><ol>{examiner}</ol></div>' if examiner else "")
+        + render_next(data.get("next") or {})
         + '<p class="foot">Green tags are sources in your library · amber tags still need a source · '
           'no reference on this page is invented.</p>')
-    title = "Perspectives - " + (data.get("question") or "")[:80]
+    title = "Discuss - " + (data.get("question") or "")[:80]
     page = TEMPLATE.replace("__TITLE__", esc(title)).replace("__BODY__", body)
     return page, sorted(set(unknown)), downgraded, dominant
 
@@ -297,7 +467,7 @@ TEMPLATE = r"""<!doctype html>
   --bg:#f6f5f2;--card:#ffffff;--text:#1f2328;--muted:#6b7079;--line:#e6e3dc;
   --ok:#2e7d4f;--okt:#e8f5ee;--need:#a86a12;--needt:#fbf2e2;
   --c1:#2f6fb0;--c1t:#eaf2fb;--c2:#c2453d;--c2t:#fcecea;--c3:#2e8a57;--c3t:#e8f5ee;--c4:#b7791f;--c4t:#fbf2e2;
-  --c5:#6a4fb3;--c5t:#f0ecfa;--c6:#1f8a8a;--c6t:#e3f4f4;--c7:#b04a85;--c7t:#f8eaf2;--c8:#5a6472;--c8t:#eef0f3;
+  --c5:#6a4fb3;--c5t:#f0ecfa;--c6:#1f8a8a;--c6t:#e3f4f4;--c7:#b04a85;--c7t:#f8eaf2;--c8:#c0621f;--c8t:#fcefe4;
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){
@@ -305,7 +475,7 @@ TEMPLATE = r"""<!doctype html>
     --bg:#141619;--card:#1c1f23;--text:#e6e7e9;--muted:#9aa1ab;--line:#2d3137;
     --ok:#5cc08a;--okt:#17301f;--need:#e2a94f;--needt:#35281a;
     --c1:#6aa6e3;--c1t:#1a2a3b;--c2:#ec7a72;--c2t:#3a1f1d;--c3:#5cc08a;--c3t:#17301f;--c4:#e2a94f;--c4t:#35281a;
-    --c5:#a58ff0;--c5t:#272040;--c6:#5cc4c4;--c6t:#163030;--c7:#e07ab5;--c7t:#3a1d2e;--c8:#a3acb8;--c8t:#262a30;
+    --c5:#a58ff0;--c5t:#272040;--c6:#5cc4c4;--c6t:#163030;--c7:#e07ab5;--c7t:#3a1d2e;--c8:#ec9a5c;--c8t:#3a2618;
     color-scheme:dark;
   }
 }
@@ -313,7 +483,7 @@ TEMPLATE = r"""<!doctype html>
   --bg:#141619;--card:#1c1f23;--text:#e6e7e9;--muted:#9aa1ab;--line:#2d3137;
   --ok:#5cc08a;--okt:#17301f;--need:#e2a94f;--needt:#35281a;
   --c1:#6aa6e3;--c1t:#1a2a3b;--c2:#ec7a72;--c2t:#3a1f1d;--c3:#5cc08a;--c3t:#17301f;--c4:#e2a94f;--c4t:#35281a;
-  --c5:#a58ff0;--c5t:#272040;--c6:#5cc4c4;--c6t:#163030;--c7:#e07ab5;--c7t:#3a1d2e;--c8:#a3acb8;--c8t:#262a30;
+  --c5:#a58ff0;--c5t:#272040;--c6:#5cc4c4;--c6t:#163030;--c7:#e07ab5;--c7t:#3a1d2e;--c8:#ec9a5c;--c8t:#3a2618;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
@@ -323,7 +493,24 @@ body{margin:0;background:var(--bg);color:var(--text);font:15.5px/1.6 -apple-syst
 h1{font:600 1.7rem/1.25 "Iowan Old Style",Palatino,Georgia,serif;margin:6px 0 6px}
 .lede{color:var(--muted);margin:0 0 22px}
 .legend{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 22px}
-.legend span{font-size:.8rem;padding:3px 10px;border-radius:999px;background:var(--t);color:var(--a);font-weight:600}
+.legend button{font:600 .8rem/1.4 inherit;padding:3px 10px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer}
+.legend button.on{background:var(--t);color:var(--a);border-color:transparent}
+.legend button.all{color:var(--text)}
+.claims{margin:2px 0 0}
+.full summary{cursor:pointer;color:var(--a);font-size:.85rem;font-weight:600;margin-top:8px}
+.full[open] summary{margin-bottom:4px}
+.arg{border-top:1px solid var(--line);padding:8px 0 4px}
+.claim{font-weight:600;margin-bottom:2px}
+.part{display:grid;grid-template-columns:120px 1fr;gap:10px;font-size:.92rem;padding:2px 0}
+.part b{color:var(--a);font-weight:600}
+.mq{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;text-align:center;font-weight:600;margin-bottom:12px}
+.mg{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.mn{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--a);padding:10px 14px;font-size:.9rem}
+.mh{color:var(--a);font-weight:700;font-size:.85rem}
+.mpos{font-weight:600;margin:2px 0 4px}
+.mp,.mo{padding:3px 0 3px 10px;margin-top:6px;border-left:3px solid var(--ok)}
+.mo{border-left-color:var(--c2);margin-left:12px;color:var(--muted)}
+.next{margin-top:18px}
 .card{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--a);border-radius:12px;padding:16px 18px 18px;margin-bottom:14px}
 .head{display:flex;align-items:center;gap:10px;margin-bottom:6px}
 .icon{width:30px;height:30px;border-radius:8px;background:var(--t);color:var(--a);display:grid;place-items:center;font-weight:700;font-size:.95rem;flex:none}
@@ -371,7 +558,7 @@ h2{font:600 1.2rem/1.3 "Iowan Old Style",Palatino,Georgia,serif;margin:30px 0 10
 .tile .label{margin-top:0}
 .tile p{margin-top:6px}
 .t-strongest{border-top:3px solid var(--ok)}.t-weakest{border-top:3px solid var(--c2)}
-.l-agree{border-top:3px solid var(--c1)}.l-blind_spots{border-top:3px solid var(--c8)}
+.l-agree{border-top:3px solid var(--c1)}.l-blind_spots{border-top:3px solid var(--muted)}
 .review{margin-bottom:26px}
 .callout.weak{border-left:4px solid var(--c2)}
 .muted{color:var(--muted);font-size:.9rem;margin-top:4px}
@@ -384,13 +571,30 @@ h2{font:600 1.2rem/1.3 "Iowan Old Style",Palatino,Georgia,serif;margin:30px 0 10
 .balance i{display:block;background:var(--a)}
 .flag{color:var(--c2);font-weight:600;margin-top:8px}
 @media (max-width:520px){.tag{display:none}h1{font-size:1.45rem}}
-@media print{body{background:#fff}.card,.clash,.box{break-inside:avoid}}
+@media print{body{background:#fff}.card,.clash,.box,.mn{break-inside:avoid}.legend{display:none}}
 </style>
 </head>
 <body>
 <div class="wrap">
 __BODY__
 </div>
+<script>
+(function(){
+  var f=document.getElementById('filters'); if(!f) return;
+  var full=function(){return document.querySelectorAll('details.full')};
+  f.addEventListener('click',function(e){
+    var b=e.target.closest('button'); if(!b) return;
+    if(b.classList.contains('all')){
+      var open=b.textContent==='Expand all';
+      full().forEach(function(d){d.open=open}); b.textContent=open?'Collapse all':'Expand all'; return;
+    }
+    b.classList.toggle('on');
+    var show=b.classList.contains('on');
+    document.querySelectorAll('[data-k="'+b.dataset.k+'"]').forEach(function(el){if(el!==b) el.style.display=show?'':'none'});
+  });
+  window.addEventListener('beforeprint',function(){full().forEach(function(d){d.open=true})});
+})();
+</script>
 </body>
 </html>
 """
@@ -408,6 +612,7 @@ def main(argv=None) -> int:
     try:
         data = json.loads(src.read_text(encoding="utf-8"))
         page, unknown, downgraded, dominant = render(data, library_ids(root))
+        checks, vague = check_record(data)
         out = src.with_suffix(".html")
         out.write_text(page, encoding="utf-8")
         try:
@@ -420,6 +625,10 @@ def main(argv=None) -> int:
             result["warning"] = "these sources are not in INDEX.md and were shown as gaps"
         if dominant:
             result["dominant_perspective"] = dominant
+        if checks:
+            result["checks"] = checks
+        if vague:
+            result["vague"] = vague
         if downgraded:
             result["downgraded"] = downgraded
             result["downgrade_note"] = "'high' findings without a library source were shown as 'medium'"

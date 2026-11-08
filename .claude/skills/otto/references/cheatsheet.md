@@ -13,9 +13,9 @@
 
 | Type | You get |
 |---|---|
-| `/otto discuss [your question]` | your question through five lenses, as coloured cards |
-| `map where they fight` | where they contradict each other, and what nobody covered |
-| `write the briefing` | a summary for your supervisor and 5 key findings |
+| `/otto discuss [your question]` | your question through eight lenses, each with 3–4 arguments: tap a lens to hide it, or open its full reasoning |
+| `map the arguments` | a map of every lens's reasons and objections, where they contradict, and what nobody covered |
+| `write the briefing` | a summary for your supervisor and 6–8 key findings |
 | `grade your work` | how confident each finding is, and the weakest claim |
 
 Example: `/otto discuss whether the PRA should regulate LDI funds directly`

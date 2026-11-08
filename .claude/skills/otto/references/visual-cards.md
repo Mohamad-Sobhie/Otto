@@ -4,85 +4,145 @@ Discuss output is shown **inside the chat** as coloured cards, using the Claude 
 
 ## Rules
 
-- **Once per session, before the first card,** call the visual tool's `read_me` (module `mockup`) silently. Never mention it.
-- One `show_widget` call per stage. Give it a specific `title` (e.g. `discuss_nbfi_perspectives`, `discuss_nbfi_fight_map`).
-- The tool's own rules apply: no emoji inside the widget, sentence case, font weights 400/500 only, colours only through CSS variables (they adapt to dark mode), no big headings inside the widget (use the small `.pl` labels).
-- Keep the fixed colour per perspective (the chat emoji in the text match):
+- **Once per session, before the first card,** call the visual tool's `read_me` (modules `mockup` and `interactive`) silently. Never mention it.
+- One `show_widget` call per stage. Give it a specific `title` (e.g. `discuss_nbfi_lenses`, `discuss_nbfi_argument_map`).
+- The tool's own rules apply: no emoji inside the widget, sentence case, font weights 400/500 only, colours only through CSS variables (they adapt to dark mode), no big headings inside the widget (use the small `.pl` / `.lb` labels).
+- Keep the fixed colour per lens (the chat emoji in the text match):
 
-| Perspective | Accent `--a` | Tint `--t` | Icon | Chat emoji |
+| Lens | Accent `--a` | Tint `--t` | Icon | Chat emoji |
 |---|---|---|---|---|
 | practitioner | `var(--text-tint-blue)` | `var(--bg-tint-blue)` | `ti-tool` | 🟦 |
 | skeptic | `var(--text-tint-red)` | `var(--bg-tint-red)` | `ti-help` | 🟥 |
 | economist | `var(--text-tint-green)` | `var(--bg-tint-green)` | `ti-coin-pound` (`ti-coin` outside the UK) | 🟩 |
 | historian | `var(--text-tint-yellow)` | `var(--bg-tint-yellow)` | `ti-hourglass` | 🟨 |
 | academic | `var(--text-tint-violet)` | `var(--bg-tint-violet)` | `ti-books` | 🟪 |
-| extra (schools of thought) | `aqua`, `magenta`, `orange` tints in that order | | `ti-scale`, `ti-building-bank`, `ti-flag` | ◻️ |
+| legal (the Lawyer) | `var(--text-tint-aqua)` | `var(--bg-tint-aqua)` | `ti-scale` | 🔷 |
+| justice (Social justice) | `var(--text-tint-magenta)` | `var(--bg-tint-magenta)` | `ti-heart-handshake` | 🩷 |
+| global_south (the Global South) | `var(--text-tint-orange)` | `var(--bg-tint-orange)` | `ti-world` | 🟧 |
+| schools of thought | the same eight hues in order (they replace the lenses) | | `ti-building-bank`, `ti-flag`, `ti-scale`, ... | ◻️ |
 
 - Source tags: library-backed → class `ok` (`var(--bg-success)` / `var(--text-success)`), text `source-id, pinpoint`. Gap → class `nd` (`var(--bg-warning)` / `var(--text-warning)`), text `needs: kind of source` or `not in your library yet`. Only sources that are in INDEX.md may get an `ok` tag.
-- **No buttons.** Clickable buttons (`sendPrompt`) don't work in the Claude Code app, so never add any. Next steps go in the reply's *Next:* line instead.
+- **No `sendPrompt` buttons.** Buttons that send a message to the chat don't work in the Claude Code app, so never add any. Show/hide toggles and filter chips that only change the page (the script in the stage 1 template) are fine. Next steps go in the widget's next-step box and the reply's *Next:* line.
+- **Write the full content as plain HTML, then let the script fold it.** Everything is visible while the widget streams (and if the script fails); the script at the end builds the filter chips and folds the full reasoning. Copy the script exactly.
 - **Everything goes in the cards; nothing is repeated in text.** The reply around a widget is exactly:
-  1. one short intro line before it (e.g. "Here's your question through the five lenses:"), and
-  2. one *Next:* line after it (e.g. *Next: map where they fight · write the briefing · play the examiner*).
-  Never restate, summarise or list the cards' content in text - the student sees it once, in the cards. (The tool itself warns against duplicating what it shows.)
-- **If the visual tool isn't available** (e.g. the terminal version of Claude Code), give the same content as markdown with the chat emoji per perspective (layout in SKILL.md) - never paste raw HTML into the reply.
+  1. one short intro line before it (e.g. "Here's your question through the eight lenses. Tap a lens to hide it, or open its full reasoning:"), and
+  2. one *Next:* line after it, recommended step first.
+  Never restate, summarise or list the cards' content in text - the student sees it once, in the cards.
+- **If the visual tool isn't available** (e.g. the terminal version of Claude Code), give the same content as markdown with the chat emoji per lens (layout in SKILL.md) - never paste raw HTML into the reply.
 
 ## Shared style block (start every widget with this)
 
 ```html
 <h2 class="sr-only">ONE-SENTENCE SUMMARY OF THE WIDGET</h2>
 <style>
-.pc{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:14px 18px;margin:0 0 10px;position:relative;overflow:hidden}
+.pc{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:14px 18px 14px 20px;margin:0 0 10px;position:relative;overflow:hidden}
 .pc::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--a)}
 .ph{display:flex;align-items:center;gap:10px;margin-bottom:6px}
-.pi{width:28px;height:28px;border-radius:8px;background:var(--t);color:var(--a);display:flex;align-items:center;justify-content:center;font-size:16px}
+.pi{width:28px;height:28px;border-radius:8px;background:var(--t);color:var(--a);display:flex;align-items:center;justify-content:center;font-size:16px;flex:none}
 .pn{font-weight:500;font-size:15px}
 .pt{margin-left:auto;font-size:13px;font-style:italic;color:var(--text-secondary)}
-.pl{font-size:11px;letter-spacing:.04em;color:var(--a,var(--text-secondary));font-weight:500;margin:10px 0 2px}
+.pl,.lb{font-size:11px;letter-spacing:.04em;color:var(--a,var(--text-secondary));font-weight:500;margin:10px 0 2px}
+.lb{color:var(--text-secondary);margin:0 0 6px}
 .pc p,.bx p{margin:0;font-size:14px;line-height:1.6}
-.pc ul,.bx ul,.bx ol{margin:2px 0 0;padding-left:18px;font-size:14px;line-height:1.6}
+.pc ul,.pc ol,.bx ul,.bx ol{margin:2px 0 0;padding-left:18px;font-size:14px;line-height:1.6}
 .tg{display:inline-block;font-size:12px;padding:0 8px;border-radius:6px;margin-left:4px}
 .ok{background:var(--bg-success);color:var(--text-success)}
 .nd{background:var(--bg-warning);color:var(--text-warning)}
-.os{background:var(--t);border-radius:8px;padding:8px 12px;margin-top:10px}
-.os p{color:var(--a)}
 .bx{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:12px 16px;margin:0 0 10px}
 .ch{display:inline-block;font-size:12px;padding:1px 9px;border-radius:999px;background:var(--t);color:var(--a);font-weight:500}
 .dt{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--a);margin-right:3px}
 .row{display:flex;gap:12px;padding:8px 0;border-bottom:0.5px solid var(--border);align-items:flex-start}
 .row:last-child{border-bottom:none}
 .g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.f{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.f button{font-size:12px;padding:3px 10px;border-radius:999px;border:0.5px solid var(--border-strong);background:transparent;color:var(--text-secondary);cursor:pointer}
+.f button.on{background:var(--t);color:var(--a);border-color:transparent}
+.mr{font-size:12px;color:var(--a);background:none;border:none;padding:0;margin-top:8px;cursor:pointer}
+.fr{margin-top:8px}
+.ag{border-top:0.5px solid var(--border);padding:8px 0 4px}
+.an{font-size:14px;font-weight:500;line-height:1.5;margin-bottom:4px}
+.r{display:grid;grid-template-columns:110px minmax(0,1fr);gap:8px;font-size:13px;line-height:1.55;padding:2px 0}
+.r b{font-weight:500;color:var(--a)}
+.nx{border:0.5px solid var(--border);border-radius:12px;padding:12px 16px;margin-top:10px;background:var(--surface-1)}
 </style>
 <div style="padding:.5rem 0">
   ... stage content ...
 </div>
 ```
 
-## Stage 1 · perspective card (repeat for each of the five)
+## Stage 1 · the eight lenses
+
+Order: step label, filter bar, the eight lens cards inside `#cards`, then clashes, thesis, examiner questions, the next-step box, and the script last.
 
 ```html
-<div class="pc" style="--a:var(--text-tint-blue);--t:var(--bg-tint-blue)">
-  <div class="ph"><div class="pi"><i class="ti ti-tool" aria-hidden="true"></i></div>
-    <div class="pn">The practitioner</div><div class="pt">has done the job</div></div>
-  <div class="pl">Core position</div><p>...</p>
-  <div class="pl">Strongest evidence</div>
-  <ul><li>Claim <span class="tg ok">fsma-2023, s 25</span></li>
-      <li>Claim <span class="tg nd">needs: Bank of England report on 2022</span></li></ul>
-  <div class="os"><div class="pl" style="margin-top:0">Only they'd say</div><p>...</p></div>
+<div class="lb">Step 1 of 4 · eight lenses · tap a lens to hide it</div>
+<div class="f" id="f"></div>
+<div id="cards">
+<div class="pc" style="--a:var(--text-tint-aqua);--t:var(--bg-tint-aqua)">
+  <div class="ph"><div class="pi"><i class="ti ti-scale" aria-hidden="true"></i></div>
+    <div class="pn">The lawyer</div><div class="pt">reads the rulebook</div></div>
+  <p>Position: one sentence that answers the question.</p>
+  <ol class="cl"><li>Claim 1, one line</li><li>Claim 2</li><li>Claim 3</li></ol>
+  <button class="mr">Show full reasoning</button>
+  <div class="fr">
+    <div class="ag"><div class="an">1. Claim 1</div>
+      <div class="r"><b>Because</b><span>grounds <span class="tg nd">needs: FPC powers provisions</span></span></div>
+      <div class="r"><b>Only holds if</b><span>hidden assumption</span></div>
+      <div class="r"><b>Type</b><span>rule and authority</span></div>
+      <div class="r"><b>Weak point</b><span>the critical question, made specific</span></div>
+      <div class="r"><b>Objection</b><span><span class="ch" style="--a:var(--text-tint-green);--t:var(--bg-tint-green)">Economist</span> the objection</span></div>
+      <div class="r"><b>Reply</b><span>the reply (or "no good reply yet")</span></div>
+    </div>
+    ... one .ag per argument (3-4) ...
+  </div>
 </div>
-```
-After the five cards, in the **same** widget:
-
-```html
+... the other seven lens cards, in order ...
+</div>
 <div class="bx"><div class="pl">Where they clash</div>
-  <div class="row"><div style="white-space:nowrap;padding-top:4px"><span class="dt" style="--a:var(--text-tint-blue)"></span><span class="dt" style="--a:var(--text-tint-red)"></span></div>
-    <p><span style="font-weight:500">Practitioner vs skeptic:</span> ...</p></div>
+  <div class="row"><div style="white-space:nowrap;padding-top:4px"><span class="dt" style="--a:var(--text-tint-blue)"></span><span class="dt" style="--a:var(--text-tint-yellow)"></span></div>
+    <p><span style="font-weight:500">Practitioner vs historian:</span> the disagreement · who wins, on what condition</p></div>
 </div>
 <div class="bx"><div class="pl">What this means for your thesis</div><p>...</p></div>
 <div class="bx"><div class="pl">Likely examiner questions</div><ol><li>...</li></ol></div>
+<div class="nx"><div class="lb">Recommended next step</div><p style="margin:0;font-size:14px;line-height:1.6">The step, and why these results point to it. Or: alternative · alternative.</p></div>
+<script>
+(()=>{const f=document.getElementById('f'),cs=[...document.querySelectorAll('#cards .pc')];
+const set=(c,o)=>{c.querySelector('.fr').style.display=o?'':'none';const l=c.querySelector('.cl');if(l)l.style.display=o?'none':'';c.querySelector('.mr').textContent=o?'Hide full reasoning':'Show full reasoning'};
+cs.forEach(c=>{const b=document.createElement('button');b.className='on';b.style.cssText=c.style.cssText;b.textContent=c.querySelector('.pn').textContent.replace(/^the /i,'');
+b.onclick=()=>{b.classList.toggle('on');c.style.display=b.classList.contains('on')?'':'none'};f.appendChild(b);
+set(c,false);c.querySelector('.mr').onclick=()=>set(c,c.querySelector('.fr').style.display=='none')});
+const a=document.createElement('button');a.textContent='Expand all';let all=false;
+a.onclick=()=>{all=!all;cs.forEach(c=>set(c,all));a.textContent=all?'Collapse all':'Expand all'};f.appendChild(a)})();
+</script>
 ```
-Next line: *Next: map where they fight · write the briefing · play the examiner*.
+Next line: *Next: [recommended step] · map the arguments · play the examiner*.
 
-## Stage 2 · fight map
+## Stage 2 · argument map and fight map
+
+Argument map first (one node per lens, in order, built from the stage 1 arguments; reasons green, objections red with the attacking lens and the reply), then the fight map below it, in the same widget. Label: `Step 2 of 4 · argument map`.
+
+```html
+<style>
+.mq{border:0.5px solid var(--border-strong);border-radius:12px;padding:10px 14px;text-align:center;font-size:15px;font-weight:500;margin:0 0 10px}
+.mg{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;margin-bottom:12px}
+.mn{border:0.5px solid var(--border);border-top:3px solid var(--a);border-radius:0;padding:10px 12px;background:var(--surface-2)}
+.mh{font-size:13px;font-weight:500;color:var(--a);margin-bottom:4px}
+.mp,.mo{font-size:13px;line-height:1.5;padding:4px 0 4px 10px;margin-top:6px;border-left:3px solid var(--text-success)}
+.mo{border-left-color:var(--text-danger);margin-left:12px;color:var(--text-secondary)}
+</style>
+<div class="mq">The question</div>
+<div class="mg">
+  <div class="mn" style="--a:var(--text-tint-blue)"><div class="mh">Practitioner</div>
+    <p style="margin:0;font-size:13px;font-weight:500">Position</p>
+    <div class="mp">Claim 1</div><div class="mo">Lawyer: objection → reply</div>
+    <div class="mp">Claim 2</div><div class="mo">Economist: objection → reply</div>
+  </div>
+  ... one node per lens ...
+</div>
+<p style="font-size:12px;color:var(--text-secondary);margin:0 0 12px">Green: reasons · red: objections, named by the lens that raises them</p>
+```
+
+Then the fight map:
 
 ```html
 <div class="bx"><div class="pl">Direct contradictions</div>
@@ -98,7 +158,7 @@ Next line: *Next: map where they fight · write the briefing · play the examine
   <div class="bx"><div class="pl">What nobody addressed</div><ul><li>To check: ...</li></ul></div>
 </div>
 ```
-Next line: *Next: write the briefing · debate the two strongest*.
+Next line: *Next: write the briefing · debate the two strongest*. Use step labels `Step 3 of 4 · briefing` and `Step 4 of 4 · peer review` on the later stages.
 
 ## Stage 3 · briefing
 

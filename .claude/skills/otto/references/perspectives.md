@@ -1,31 +1,81 @@
-# Discuss-mode perspectives
+# Discuss-mode lenses
 
-## Default: the five research perspectives
+## Default: the eight lenses
 
-Use these five for every Discuss request unless the student asks for something else. Always show all five, in this order, with these colours (chat emoji = board colour):
+Use all eight for every Discuss request, in this order, unless the student asks for schools of thought. The student filters them in the cards; never drop a lens yourself. Fixed colours (chat emoji = card colour):
 
 | Emoji | Key | Name | Tagline | Lens |
 |---|---|---|---|---|
-| 🟦 | `practitioner` | The Practitioner | has done the job | Real-world application: what happens on the ground when people live this topic daily (the supervisor, the fund manager, the trustee, the official). |
-| 🟥 | `skeptic` | The Skeptic | doubts the consensus | Devil's advocate: why the common consensus or surface-level assumption is fundamentally wrong. |
-| 🟩 | `economist` | The Economist | follows the money | Resource constraints, financial incentives, funding, costs, who pays and who gains. |
-| 🟨 | `historian` | The Historian | has seen this before | Long-term patterns, recurring cycles, precedents, and what history says about how this plays out. |
-| 🟪 | `academic` | The Academic | read the studies | Theory, empirical data, studies and literature reviews, judged by rigorous research criteria. |
+| 🟦 | `practitioner` | The Practitioner | has done the job | What happens on the ground: what the people who do this daily (supervisor, fund manager, trustee, official) can actually see, monitor and enforce. |
+| 🟥 | `skeptic` | The Skeptic | doubts the consensus | Attacks the premise everyone else shares. Steelmans the contrarian case. |
+| 🟩 | `economist` | The Economist | follows the money | Incentives, costs, who gains, where activity moves when rules change. Judges by efficiency. |
+| 🟨 | `historian` | The Historian | has seen this before | Precedents and reform cycles: what earlier episodes say about how this plays out. |
+| 🟪 | `academic` | The Academic | read the studies | Theory and empirical work, judged by research quality: what the studies identify, and how well. |
+| 🔷 | `legal` | The Lawyer | reads the rulebook | What the law permits and requires now: legal basis, mandate and vires, competing rules, legal certainty, who could challenge it. |
+| 🩷 | `justice` | Social justice | asks who bears it | Fairness and voice: who carries losses and risks, who decides, accountability of unelected bodies. Judges by fairness, not efficiency. |
+| 🟧 | `global_south` | The Global South | sees the spillover | Effects on emerging and developing economies, and on countries that take rules they did not make. |
 
-### Applying them to the student's topic
-- Translate each lens into the field. Law/finance regulation (NBFIs) example:
-  - 🟦 Practitioner: PRA/FCA/ECB supervisors, fund managers, pension trustees, central bank market operations - what they can actually monitor and enforce.
-  - 🟥 Skeptic: attacks the dominant framing (e.g. "regulate through banks", or "same activity, same risk").
-  - 🟩 Economist: leverage and liquidity incentives, cost of capital, who bears losses, moral hazard of backstops, competitiveness objectives.
-  - 🟨 Historian: 2008 shadow banking, the March 2020 "dash for cash", the 2022 gilt/LDI episode, earlier reform cycles.
-  - 🟪 Academic: law-and-economics and regulatory theory, empirical interconnectedness studies, quality of the evidence.
-- Each perspective must **take a position** on the student's question - not five neutral summaries.
-- **Only they'd say:** one sharp line no other perspective would say. It's a characterisation, not a quote - never attribute it to a real person.
-- **Evidence:** 2-3 claims. Each claim is either backed by a library source (source-id + pinpoint) or marked as needing a source, naming the *kind* of source. Never invent a reference.
-- The Skeptic steelmans the contrarian case; nobody gets a strawman.
+### Keep the lenses apart
+- **Economist vs Social justice:** the Economist asks "is it efficient, where does the activity go?"; Social justice asks "is it fair, who pays and who had a say?". If a point fits both, give it to the one whose test it uses.
+- **Practitioner vs Lawyer:** the Practitioner asks "can it be done with today's data and staff?"; the Lawyer asks "is there a legal basis, and does a higher rule block it?".
+- **Historian vs Academic:** the Historian argues from particular episodes; the Academic from systematic evidence across many cases.
+- **Skeptic:** must attack a premise the other seven share, not just pick a side.
 
-### Alternative: schools of thought
-If the student asks for "schools of thought", "the regulatory/legal positions" or a field preset, use 3-4 perspectives from the presets below instead. On the board they take the remaining colours automatically (give each a `name`, `tagline` and one-character `icon`).
+### Translating them to the topic (law, NBFI example)
+- 🟦 Practitioner: PRA/FCA/ECB supervisors, fund managers, pension trustees, central bank market operations.
+- 🟥 Skeptic: attacks the dominant framing (e.g. "regulate through banks", "same activity, same risk", or the assumption that rules matter more than the backstop).
+- 🟩 Economist: leverage and liquidity incentives, cost of capital, migration of activity, moral hazard of backstops.
+- 🟨 Historian: 2008 shadow banking, the March 2020 "dash for cash", the 2022 gilt/LDI episode, earlier reform cycles.
+- 🟪 Academic: law-and-economics, regulatory theory, empirical interconnectedness studies and their limits.
+- 🔷 Lawyer: FSMA 2000 as amended, FPC direction and recommendation powers, Bank of England Act framework, AIFMD/UCITS/MMFR, Treaty limits on the ECB.
+- 🩷 Social justice: pension scheme members, savers and taxpayers who bear losses or rescue costs; democratic control of central bank and FPC decisions.
+- 🟧 Global South: capital-flow and currency spillovers from UK/EU fund stress; who sits on the FSB and Basel Committee and who only implements.
+
+## How every lens argues
+
+Each lens gives a **position** and then **3-4 distinct arguments** (5 at most), so the student gets the full case and filters it themselves. Cover different grounds: e.g. for the Lawyer, one on legal basis, one on competing objectives, one on enforcement or challenge, one on cross-border reach. Fewer than 3 only when the lens honestly has nothing more distinct to say - then say so in the position ("only one real argument here: ..."). Never pad with a repeated or weaker version of an earlier point.
+
+**Short view vs full reasoning:** the cards show the position and each argument's claim on one line; "Show full reasoning" opens all six parts for every argument. So each claim must make sense on its own line.
+
+**Position:** one sentence that answers the student's question: yes, no, or "only if X". Never "it depends" without saying on what.
+
+**Each argument has six parts** (this is the Toulmin model, adapted):
+
+| Part | JSON | Rule |
+|---|---|---|
+| Claim | `claim` | One point. Two different points are two arguments, never one blended bullet. |
+| Because | `because` + `source`/`pinpoint` or `needed` | The grounds: a fact, rule, episode or finding. Library source if there is one; otherwise name the *kind* of source needed. Never invent a reference. |
+| Only holds if | `holds_if` | The hidden assumption that links the grounds to the claim. If it fails, the argument fails. |
+| Type | `type` | One key from the table below. |
+| Weak point | `weak_point` | The critical question for that type, made specific to this argument. |
+| Objection → reply | `objection: {by, text, reply}` | The strongest objection, from another named lens (`by`), and this lens's reply. If there's no good reply, say so: that's useful. |
+
+### Argument types and their critical questions
+
+| `type` | Name | Typical lens | Critical question (make it specific) |
+|---|---|---|---|
+| `practical` | Practical reasoning | Practitioner | Can it be done with the powers, data and staff that exist? What does it cost to run? |
+| `assumption` | Attacking a shared assumption | Skeptic | Is the premise really shared and really false? What follows if it is only partly false? |
+| `consequences` | Argument from consequences | Economist | Will the effect really follow? How large is it, and what else changes at the same time? |
+| `precedent` | Precedent / analogy | Historian | Is this case relevantly like the earlier one? What is different now? |
+| `expert` | Expert evidence | Academic | Does the study identify cause or only correlation? Does it cover this market and period? Do other studies agree? |
+| `rule` | Rule and authority | Lawyer | Is there a legal basis? Does a higher rule, an exception or a competing objective apply? |
+| `principle` | Principle and fairness | Social justice | Whose interests count, who bears the cost, and who decided? |
+| `spillover` | Spillover / exclusion | Global South | Who is affected but not represented? Is the channel of transmission shown, or assumed? |
+| `cause` | Cause to effect | any | Is the causal link shown, or could something else explain it? |
+
+A lens may use a type outside its usual one when that is the honest description.
+
+## Be specific (not fluffy)
+
+- Every claim names at least one concrete thing: an actor, an instrument or rule, a date or episode, a mechanism, or a figure from the library.
+- No sentence that would be true of any topic ("this is a complex issue", "there are various factors").
+- No "both sides have a point" endings. Where lenses clash, say who wins **on what condition**.
+- If two lenses make the same point, keep it once, under the lens whose test it uses, and note "the Economist agrees".
+- The script flags vague and stock wording; rewrite flagged lines before showing them.
+
+## Alternative: schools of thought
+If the student asks for "schools of thought", "the regulatory/legal positions" or a field preset, use 3-5 perspectives from the presets below instead, with the same argument structure. On the cards they take the remaining colours automatically (give each a `name`, `tagline` and one-character `icon`).
 
 ---
 
