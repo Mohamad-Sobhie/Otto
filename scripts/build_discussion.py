@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """Render a Discuss session (JSON) as a colour-coded perspectives board (HTML).
 
-Usage: build_discussion.py sessions/2026-10-31-discuss-nbfi.json [--root DIR]
+Usage: build_discussion.py sessions/2026-10-31-discuss-nbfi.json [--root DIR] [--chat lenses|map]
 Writes the .html next to the .json and prints one line of JSON.
+--chat also writes the in-chat cards for that stage (<name>.chat-lenses.html or
+<name>.chat-map.html), built from the same record, for the visual tool's show_widget:
+pass the file's content unchanged. "lenses" = stage 1; "map" = stage 2 (argument map + fight map).
 
 Input format:
 {
@@ -26,7 +29,8 @@ Input format:
         "objection": {"by": "legal", "text": "the objection", "reply": "the reply"}}
      ]}
   ],                                            (older records with "evidence" and "only" still render)
-  "clashes": [{"between": ["practitioner", "skeptic"], "text": "... who wins, on what condition"}],
+  "clashes": [{"between": ["practitioner", "skeptic"], "text": "on X: who wins, on what condition"}],
+                                                (the cards add "Practitioner vs Skeptic:" themselves)
   "thesis": "what this means for the thesis",
   "examiner": ["question 1", "question 2"],
   "next": {"step": "the recommended next step", "why": "why these results point to it",
@@ -144,6 +148,17 @@ def chip(key: str, names: dict, colours: dict) -> str:
     return f'<span class="chip p{colours[key]}">{esc(names[key].replace("The ", ""))}</span>'
 
 
+def clash_text(c: dict, names: dict, pair: list) -> str:
+    """The cards already show 'A vs B:', so drop a repeated 'A vs B (on X):' prefix from the text."""
+    text = (c.get("text") or "").strip()
+    if len(pair) >= 2:
+        a, b = (re.escape(names[k].replace("The ", "")) for k in pair[:2])
+        m = re.match(rf"(?:{a}\s+vs\.?\s+{b}|{b}\s+vs\.?\s+{a})\b\s*(?:,?\s*(on [^:]+))?:\s*", text, re.I)
+        if m:
+            text = (m.group(1) + ": " if m.group(1) else "") + text[m.end():]
+    return text
+
+
 def clash_rows(items: list, names: dict, colours: dict) -> str:
     rows = []
     for c in items or []:
@@ -151,7 +166,7 @@ def clash_rows(items: list, names: dict, colours: dict) -> str:
         dots = "".join(f'<span class="dot p{colours[k]}"></span>' for k in pair)
         label = " vs ".join(esc(names[k].replace("The ", "")) for k in pair)
         rows.append(f'<div class="row"><div class="pair">{dots}</div><p>'
-                    + (f"<b>{label}:</b> " if label else "") + f'{esc(c.get("text"))}</p></div>')
+                    + (f"<b>{label}:</b> " if label else "") + f'{esc(clash_text(c, names, pair))}</p></div>')
     return "".join(rows)
 
 
@@ -310,6 +325,9 @@ def check_record(data: dict) -> tuple[list[str], list[dict]]:
                     checks.append(f"{k} argument {i}: the objection must come from another lens")
                 elif by and by not in keys:
                     checks.append(f"{k} argument {i}: objection from '{by}', which isn't a lens in this discussion")
+                if re.search(r"\b(?:I|we) agree\b|\bagrees? (?:here|with)\b", ob.get("text") or "", re.I):
+                    checks.append(f"{k} argument {i}: the objection agrees instead of objecting - "
+                                  "use a lens that disagrees, or write 'no lens objects' in weak_point")
                 if not ob.get("reply"):
                     checks.append(f"{k} argument {i}: objection has no reply (write 'no good reply yet' if so)")
             for part in ("claim", "because", "holds_if", "weak_point"):
@@ -388,6 +406,171 @@ def render_next(n: dict) -> str:
             + (f'<p class="muted">Or: {alts}</p>' if alts else "") + "</div>")
 
 
+# ------------------------------------------------------------------ chat cards
+# Hues and icons for the in-chat cards (Claude app design tokens), by colour slot 1-8.
+CHAT_HUES = ["blue", "red", "green", "yellow", "violet", "aqua", "magenta", "orange"]
+CHAT_ICONS = {"practitioner": "tool", "skeptic": "help", "economist": "coin-pound", "historian": "hourglass",
+              "academic": "books", "legal": "scale", "justice": "heart-handshake", "global_south": "world"}
+CHAT_EXTRA_ICONS = ["building-bank", "flag", "scale", "bulb", "users", "school", "chart-line", "target"]
+CHAT_CSS = (
+    ".pc{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:14px 18px 14px 20px;margin:0 0 10px;position:relative;overflow:hidden}"
+    ".pc::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--a)}"
+    ".ph{display:flex;align-items:center;gap:10px;margin-bottom:6px}"
+    ".pi{width:28px;height:28px;border-radius:8px;background:var(--t);color:var(--a);display:flex;align-items:center;justify-content:center;font-size:16px;flex:none}"
+    ".pn{font-weight:500;font-size:15px}.pt{margin-left:auto;font-size:13px;font-style:italic;color:var(--text-secondary)}"
+    ".pl,.lb{font-size:11px;letter-spacing:.04em;color:var(--text-secondary);font-weight:500;margin:0 0 6px}"
+    ".pc p,.bx p{margin:0;font-size:14px;line-height:1.6}.pc ol,.bx ol,.bx ul{margin:2px 0 0;padding-left:18px;font-size:14px;line-height:1.6}"
+    ".tg{display:inline-block;font-size:12px;padding:0 8px;border-radius:6px;margin-left:4px}"
+    ".ok{background:var(--bg-success);color:var(--text-success)}.nd{background:var(--bg-warning);color:var(--text-warning)}"
+    ".bx{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:12px 16px;margin:0 0 10px}"
+    ".ch{display:inline-block;font-size:12px;padding:1px 9px;border-radius:999px;background:var(--t);color:var(--a);font-weight:500}"
+    ".dt{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--a);margin-right:3px}"
+    ".row{display:flex;gap:12px;padding:8px 0;border-bottom:0.5px solid var(--border);align-items:flex-start}.row:last-child{border-bottom:none}"
+    ".f{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}"
+    ".f button{font-size:12px;padding:3px 10px;border-radius:999px;border:0.5px solid var(--border-strong);background:transparent;color:var(--text-secondary);cursor:pointer}"
+    ".f button.on{background:var(--t);color:var(--a);border-color:transparent}"
+    ".mr{font-size:12px;color:var(--a);background:none;border:none;padding:0;margin-top:8px;cursor:pointer}"
+    ".fr{margin-top:8px}.ag{border-top:0.5px solid var(--border);padding:8px 0 4px}"
+    ".an{font-size:14px;font-weight:500;line-height:1.5;margin-bottom:4px}"
+    ".r{display:grid;grid-template-columns:110px minmax(0,1fr);gap:8px;font-size:13px;line-height:1.55;padding:2px 0}"
+    ".r::before{font-weight:500;color:var(--a)}"
+    ".rb::before{content:'Because'}.rh::before{content:'Only holds if'}.ry::before{content:'Type'}"
+    ".rw::before{content:'Weak point'}.ro::before{content:'Objection'}.rp::before{content:'Reply'}"
+    ".nx{border:0.5px solid var(--border);border-radius:12px;padding:12px 16px;margin-top:10px;background:var(--surface-1)}"
+    ".mq{border:0.5px solid var(--border-strong);border-radius:12px;padding:10px 14px;text-align:center;font-size:15px;font-weight:500;margin:0 0 10px}"
+    ".mg{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;margin-bottom:12px}"
+    ".mn{border:0.5px solid var(--border);border-top:3px solid var(--a);border-radius:0;padding:10px 12px;background:var(--surface-2)}"
+    ".mh{font-size:13px;font-weight:500;color:var(--a);margin-bottom:4px}"
+    ".mp,.mo{font-size:13px;line-height:1.5;padding:4px 0 4px 10px;margin-top:6px;border-left:3px solid var(--text-success)}"
+    ".mo{border-left-color:var(--text-danger);margin-left:12px;color:var(--text-secondary)}"
+    ".g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}"
+    + "".join(f".k{i}{{--a:var(--text-tint-{h});--t:var(--bg-tint-{h})}}" for i, h in enumerate(CHAT_HUES, start=1))
+)
+CHAT_JS = """<script>
+(()=>{const f=document.getElementById('f'),cs=[...document.querySelectorAll('#cards .pc')];
+const set=(c,o)=>{c.querySelector('.fr').style.display=o?'':'none';c.querySelector('.cl').style.display=o?'none':'';c.querySelector('.mr').textContent=o?'Hide full reasoning':'Show full reasoning'};
+cs.forEach(c=>{const l=c.querySelector('.cl');c.querySelectorAll('.an').forEach(a=>{const li=document.createElement('li');li.textContent=a.textContent.replace(/^\\d+\\.\\s*/,'');l.appendChild(li)});
+const b=document.createElement('button');b.className='on '+c.dataset.k;b.textContent=c.querySelector('.pn').textContent.replace(/^the /i,'');
+b.onclick=()=>{b.classList.toggle('on');c.style.display=b.classList.contains('on')?'':'none'};f.appendChild(b);
+set(c,false);c.querySelector('.mr').onclick=()=>set(c,c.querySelector('.fr').style.display=='none')});
+const a=document.createElement('button');a.textContent='Expand all';let all=false;
+a.onclick=()=>{all=!all;cs.forEach(c=>set(c,all));a.textContent=all?'Collapse all':'Expand all'};f.appendChild(a)})();
+</script>"""
+
+
+def chat_name(names: dict, key: str) -> str:
+    n = names.get(key, key)
+    # sentence case for the chat ("The lawyer"), but keep proper nouns ("The Global South")
+    if n.startswith("The ") and key in PRESETS and key != "global_south":
+        return "The " + n[4:].lower()
+    return n
+
+
+def chat_chip(key: str, names: dict, colours: dict) -> str:
+    if key not in colours:
+        return esc(key)
+    return f'<span class="ch k{colours[key]}">{esc(names[key].replace("The ", ""))}</span>'
+
+
+def chat_tag(item: dict, ids: set[str]) -> str:
+    src = (item.get("source") or "").strip()
+    if src and src in ids:
+        pin = (item.get("pinpoint") or "").strip()
+        return f'<span class="tg ok">{esc(src)}{", " + esc(pin) if pin else ""}</span>'
+    return f'<span class="tg nd">{esc("needs: " + item["needed"] if item.get("needed") else "not in your library yet")}</span>'
+
+
+def chat_rows(items: list, names: dict, colours: dict) -> str:
+    out = ""
+    for c in items or []:
+        pair = [k for k in (c.get("between") or []) if k in colours][:3]
+        dots = "".join(f'<span class="dt k{colours[k]}"></span>' for k in pair)
+        label = " vs ".join(esc(names[k].replace("The ", "")) for k in pair)
+        out += (f'<div class="row"><div style="white-space:nowrap;padding-top:4px">{dots}</div><p>'
+                + (f'<span style="font-weight:500">{label}:</span> ' if label else "") + f'{esc(clash_text(c, names, pair))}</p></div>')
+    return out
+
+
+def chat_lenses(data: dict, ids: set[str], names: dict, colours: dict) -> str:
+    persp = data.get("perspectives") or []
+    extra = iter(CHAT_EXTRA_ICONS)
+    cards = []
+    for p in persp:
+        k = p.get("key", "")
+        icon = CHAT_ICONS.get(k) or next(extra, "point")
+        tagline = p.get("tagline") or PRESETS.get(k, ("", "", ""))[1]
+        args = ""
+        for i, a in enumerate(p.get("arguments") or [], start=1):
+            ob = a.get("objection") or {}
+            args += (f'<div class="ag"><div class="an">{i}. {esc(a.get("claim"))}</div>'
+                     f'<div class="r rb"><span>{esc(a.get("because"))} {chat_tag(a, ids)}</span></div>'
+                     f'<div class="r rh"><span>{esc(a.get("holds_if"))}</span></div>'
+                     f'<div class="r ry"><span>{esc(TYPES.get(a.get("type", ""), a.get("type", "")))}</span></div>'
+                     f'<div class="r rw"><span>{esc(a.get("weak_point"))}</span></div>'
+                     + (f'<div class="r ro"><span>{chat_chip(ob.get("by", ""), names, colours)} {esc(ob.get("text"))}</span></div>'
+                        f'<div class="r rp"><span>{esc(ob.get("reply"))}</span></div>' if ob else "")
+                     + "</div>")
+        cards.append(f'<div class="pc k{colours[k]}" data-k="k{colours[k]}"><div class="ph"><div class="pi">'
+                     f'<i class="ti ti-{icon}" aria-hidden="true"></i></div><div class="pn">{esc(chat_name(names, k))}</div>'
+                     f'<div class="pt">{esc(tagline)}</div></div><p>Position: {esc(p.get("position"))}</p>'
+                     f'<ol class="cl"></ol><button class="mr">Show full reasoning</button><div class="fr">{args}</div></div>')
+    examiner = "".join(f"<li>{esc(q)}</li>" for q in data.get("examiner") or [])
+    nxt = data.get("next") or {}
+    alts = " · ".join(esc(x) for x in nxt.get("alternatives") or [])
+    rows = chat_rows(data.get("clashes"), names, colours)
+    return (f'<h2 class="sr-only">{len(persp)} lenses on: {esc(data.get("question"))}, each with its arguments, '
+            f'objections and replies, then clashes, thesis implications, examiner questions and a next step.</h2>'
+            f'<style>{CHAT_CSS}</style><div style="padding:.5rem 0">'
+            f'<div class="lb">Step 1 of 4 · {len(persp)} lenses · tap a lens to hide it</div><div class="f" id="f"></div>'
+            f'<div id="cards">{"".join(cards)}</div>'
+            + (f'<div class="bx"><div class="pl">Where they clash</div>{rows}</div>' if rows else "")
+            + (f'<div class="bx"><div class="pl">What this means for your thesis</div><p>{esc(data["thesis"])}</p></div>' if data.get("thesis") else "")
+            + (f'<div class="bx"><div class="pl">Likely examiner questions</div><ol>{examiner}</ol></div>' if examiner else "")
+            + (f'<div class="nx"><div class="lb">Recommended next step</div><p style="margin:0;font-size:14px;line-height:1.6">'
+               f'{esc(nxt["step"])}' + (f' {esc(nxt["why"])}' if nxt.get("why") else "")
+               + (f' Or: {alts}.' if alts else "") + "</p></div>" if nxt.get("step") else "")
+            + "</div>" + CHAT_JS)
+
+
+def chat_map(data: dict, names: dict, colours: dict) -> str:
+    nodes = ""
+    for p in data.get("perspectives") or []:
+        k = p.get("key", "")
+        inner = ""
+        for a in p.get("arguments") or []:
+            inner += f'<div class="mp">{esc(a.get("claim"))}</div>'
+            ob = a.get("objection") or {}
+            if ob:
+                who = names.get(ob.get("by", ""), ob.get("by", "")).replace("The ", "")
+                inner += (f'<div class="mo"><span style="font-weight:500">{esc(who)}:</span> {esc(ob.get("text"))}'
+                          + (f' → {esc(ob.get("reply"))}' if ob.get("reply") else "") + "</div>")
+        nodes += (f'<div class="mn k{colours[k]}"><div class="mh">{esc(names[k].replace("The ", ""))}</div>'
+                  f'<p style="margin:0;font-size:13px;font-weight:500">{esc(p.get("position"))}</p>{inner}</div>')
+    f = data.get("fight") or {}
+    fight = ""
+    rows = chat_rows(f.get("contradictions") or data.get("clashes"), names, colours)
+    if rows:
+        fight += f'<div class="bx"><div class="pl">Direct contradictions</div>{rows}</div>'
+    tiles = ""
+    for slot, title, colour in (("strongest", "Strongest evidence", "success"), ("weakest", "Weakest evidence", "danger")):
+        t = f.get(slot) or {}
+        if t:
+            tiles += (f'<div class="bx" style="border-top:3px solid var(--text-{colour});border-radius:0"><div class="pl">{title}</div>'
+                      f'{chat_chip(t.get("key", ""), names, colours)}<p style="margin-top:6px">{esc(t.get("why"))}</p></div>')
+    for slot, title in (("agree", "What they all agree on"), ("blind_spots", "What nobody addressed")):
+        items = "".join(f"<li>{esc(x)}</li>" for x in f.get(slot) or [])
+        if items:
+            tiles += f'<div class="bx"><div class="pl">{title}</div><ul>{items}</ul></div>'
+    if tiles:
+        fight += f'<div class="g2">{tiles}</div>'
+    return (f'<h2 class="sr-only">Argument map for: {esc(data.get("question"))}, with each lens\'s reasons and the '
+            f'objections they drew, then where the lenses contradict each other.</h2>'
+            f'<style>{CHAT_CSS}</style><div style="padding:.5rem 0">'
+            f'<div class="lb">Step 2 of 4 · argument map</div><div class="mq">{esc(data.get("question"))}</div>'
+            f'<div class="mg">{nodes}</div><p style="font-size:12px;color:var(--text-secondary);margin:0 0 12px">'
+            f'Green: reasons · red: objections, named by the lens that raises them, with the reply</p>{fight}</div>')
+
+
 def render(data: dict, ids: set[str]) -> tuple[str, list[str], list[str]]:
     persp = data.get("perspectives") or []
     colours = colour_map(persp)
@@ -454,6 +637,12 @@ def render(data: dict, ids: set[str]) -> tuple[str, list[str], list[str]]:
     title = "Discuss - " + (data.get("question") or "")[:80]
     page = TEMPLATE.replace("__TITLE__", esc(title)).replace("__BODY__", body)
     return page, sorted(set(unknown)), downgraded, dominant
+
+
+def lens_names(data: dict) -> tuple[dict, dict]:
+    persp = data.get("perspectives") or []
+    names = {p.get("key", ""): p.get("name") or PRESETS.get(p.get("key", ""), (p.get("key", "").title(),))[0] for p in persp}
+    return names, colour_map(persp)
 
 
 TEMPLATE = r"""<!doctype html>
@@ -604,6 +793,7 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("input", help="discussion JSON file")
     ap.add_argument("--root", help="project root (default: folder above scripts/)")
+    ap.add_argument("--chat", choices=("lenses", "map"), help="also write the in-chat cards for this stage")
     args = ap.parse_args(argv)
     root = Path(args.root).resolve() if args.root else Path(__file__).resolve().parent.parent
     src = Path(args.input)
@@ -611,7 +801,8 @@ def main(argv=None) -> int:
         src = (Path.cwd() / src).resolve()
     try:
         data = json.loads(src.read_text(encoding="utf-8"))
-        page, unknown, downgraded, dominant = render(data, library_ids(root))
+        ids = library_ids(root)
+        page, unknown, downgraded, dominant = render(data, ids)
         checks, vague = check_record(data)
         out = src.with_suffix(".html")
         out.write_text(page, encoding="utf-8")
@@ -625,6 +816,15 @@ def main(argv=None) -> int:
             result["warning"] = "these sources are not in INDEX.md and were shown as gaps"
         if dominant:
             result["dominant_perspective"] = dominant
+        if args.chat:
+            names, colours = lens_names(data)
+            widget = chat_lenses(data, ids, names, colours) if args.chat == "lenses" else chat_map(data, names, colours)
+            chat_out = src.with_name(f"{src.stem}.chat-{args.chat}.html")
+            chat_out.write_text(widget, encoding="utf-8")
+            try:
+                result["chat"] = chat_out.relative_to(root).as_posix()
+            except ValueError:
+                result["chat"] = str(chat_out)
         if checks:
             result["checks"] = checks
         if vague:

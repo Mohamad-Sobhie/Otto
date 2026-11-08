@@ -48,7 +48,7 @@ Each lens gives a **position** and then **3-4 distinct arguments** (5 at most), 
 | Only holds if | `holds_if` | The hidden assumption that links the grounds to the claim. If it fails, the argument fails. |
 | Type | `type` | One key from the table below. |
 | Weak point | `weak_point` | The critical question for that type, made specific to this argument. |
-| Objection → reply | `objection: {by, text, reply}` | The strongest objection, from another named lens (`by`), and this lens's reply. If there's no good reply, say so: that's useful. |
+| Objection → reply | `objection: {by, text, reply}` | The strongest objection, from another named lens (`by`), and this lens's reply. The objection must **disagree**: a lens that agrees is not an objection. If no lens disagrees, pick the one that comes closest and say what it doubts. If there's no good reply, say so: that's useful. |
 
 ### Argument types and their critical questions
 

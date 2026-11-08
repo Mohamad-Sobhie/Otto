@@ -271,6 +271,30 @@ def quick(tmp: Path, results: list) -> None:
     check(all(t in gpage for t in ("The Lawyer", "Social justice", "The Global South", "Show full reasoning",
                                     "Only holds if", "Argument map", "Recommended next step", 'id="filters"')),
           "lenses, full reasoning, argument map and next step rendered", results)
+    full["perspectives"][0]["arguments"][0]["source"] = "testauthor-2024-shadow"
+    full["perspectives"][0]["arguments"][0]["pinpoint"] = "p 2"
+    full["perspectives"][1]["arguments"][0]["source"] = "nobody-2099-fake"
+    full["perspectives"][2]["arguments"][0]["claim"] = "Banks <b>see</b> it"
+    good.write_text(json.dumps(full), encoding="utf-8")
+    cl = run("build_discussion.py", str(good), "--root", str(root), "--chat", "lenses")
+    cm = run("build_discussion.py", str(good), "--root", str(root), "--chat", "map")
+    lw = Path(cl.get("chat", "")) if cl.get("chat") else None
+    lw = (lw if lw and lw.is_absolute() else root / (cl.get("chat") or "x")).read_text() if cl.get("chat") else ""
+    mw = cm.get("chat") or ""
+    mw = (Path(mw) if Path(mw).is_absolute() else root / mw).read_text() if mw else ""
+    check(lw.count('class="pc k') == 8 and lw.count('class="ag"') == 24 and "Show full reasoning" in lw
+          and "Recommended next step" in lw and "<script>" in lw and "<b>see</b>" not in lw and "&lt;b&gt;" in lw,
+          "chat lens cards generated from the record (escaped)", results)
+    check('tg ok">testauthor-2024-shadow, p 2' in lw and 'tg ok">nobody-2099-fake' not in lw,
+          "chat cards show only library sources as backed", results)
+    check(mw.count('class="mn k') == 8 and "argument map" in mw and "What they all agree on" in mw,
+          "chat argument map generated from the record", results)
+    agree = json.loads(json.dumps(full))
+    agree["perspectives"][3]["arguments"][2]["objection"] = {"by": "skeptic", "text": "The Historian and I agree here.", "reply": "Yes."}
+    ag = root / "sessions" / "2024-01-04-discuss-agree.json"
+    ag.write_text(json.dumps(agree), encoding="utf-8")
+    check(any("agrees instead of objecting" in c for c in run("build_discussion.py", str(ag), "--root", str(root)).get("checks") or []),
+          "an objection that agrees is reported", results)
     thin = dict(full, perspectives=[
         {"key": "practitioner", "position": "This is a complex issue with various factors.",
          "arguments": [dict(arg("practitioner", 1), objection={"by": "practitioner", "text": "x"})]},
