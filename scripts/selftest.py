@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Self-test for Draftly's helper scripts. Runs in a temporary folder and cleans up.
+"""Self-test for Otto's helper scripts. Runs in a temporary folder and cleans up.
 
   selftest.py                 quick test used by setup.sh (3-page PDF -> ingest -> INDEX -> library)
   selftest.py --full          also: PDF without bookmarks (heading split), long PDF (15-page split),
@@ -317,7 +317,7 @@ def full(tmp: Path, results: list) -> None:
 
 def installer_gitignore(results: list) -> None:
     """The npm installer embeds .gitignore (npm won't ship it); make sure the copy hasn't drifted."""
-    js, gi = HERE.parent / "bin" / "create-draftly.js", HERE.parent / ".gitignore"
+    js, gi = HERE.parent / "bin" / "create-otto.js", HERE.parent / ".gitignore"
     if not (js.exists() and gi.exists()):
         return  # a student's folder: no installer here
     m = re.search(r"const GITIGNORE = `(.*?)`;", js.read_text(encoding="utf-8"), flags=re.S)
@@ -370,9 +370,9 @@ def word_thesis(tmp: Path, results: list) -> None:
                      encoding="utf-8")
     r = run("thesis_doc.py", "export", str(draft), "--root", str(root))
     out = root / r.get("output", "missing")
-    check(r.get("ok") and out.exists() and "Draftly" in out.name and r.get("notes") == 1, "draft exported to a new Word file", results)
+    check(r.get("ok") and out.exists() and "Otto" in out.name and r.get("notes") == 1, "draft exported to a new Word file", results)
     r = run("thesis_doc.py", "find", "--root", str(root))
-    check(r.get("file") == "My thesis.docx", "Draftly exports are never taken for the student's document", results)
+    check(r.get("file") == "My thesis.docx", "Otto exports are never taken for the student's document", results)
     check(doc.read_bytes() == fingerprint, "student's document byte-for-byte unchanged after read, sync and export", results)
 
 
@@ -386,9 +386,9 @@ def main() -> int:
             print(f"{k}: {p}")
         return 0
     results: list = []
-    tmp = Path(tempfile.mkdtemp(prefix="draftly-selftest-"))
+    tmp = Path(tempfile.mkdtemp(prefix="otto-selftest-"))
     try:
-        print("Draftly self-test")
+        print("Otto self-test")
         quick(tmp, results)
         installer_gitignore(results)
         if args.full:

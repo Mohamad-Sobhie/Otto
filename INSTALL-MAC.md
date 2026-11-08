@@ -1,6 +1,6 @@
-# Installing Draftly on a Mac (with Claude Code)
+# Installing Otto on a Mac (with Claude Code)
 
-This guide is for installing Draftly on someone else's Mac that already has **Claude Code** (the desktop app or the terminal version) signed in. It takes about 10 minutes.
+This guide is for installing Otto on someone else's Mac that already has **Claude Code** (the desktop app or the terminal version) signed in. It takes about 10 minutes.
 
 You don't need to type any commands yourself: Claude Code on that Mac can do the whole install. Copy the prompt in Step 2 and paste it in.
 
@@ -9,7 +9,7 @@ You don't need to type any commands yourself: Claude Code on that Mac can do the
 ## Step 1: Open Claude Code in a starting folder
 
 1. Open the **Claude** desktop app and go to the **Code** tab (or open Terminal and type `claude`).
-2. Pick a folder to start in, for example **Documents**. Draftly will be created inside it as a new folder called `my-thesis`.
+2. Pick a folder to start in, for example **Documents**. Otto will be created inside it as a new folder called `my-thesis`.
 3. If Claude Code asks "Do you trust this folder?", say **yes**.
 
 ## Step 2: Paste this prompt into Claude Code
@@ -17,7 +17,7 @@ You don't need to type any commands yourself: Claude Code on that Mac can do the
 Copy everything in the box and paste it as one message:
 
 ```text
-Please install Draftly, a thesis-assistant template, on this Mac. Do it step by step and tell me what you're doing in plain words.
+Please install Otto, a thesis-assistant template, on this Mac. Do it step by step and tell me what you're doing in plain words.
 
 1. Check that these exist, and install anything missing:
    - Homebrew (https://brew.sh). If it's missing, tell me the exact install command to run myself, because it asks for my Mac password.
@@ -25,7 +25,7 @@ Please install Draftly, a thesis-assistant template, on this Mac. Do it step by 
    - Python 3.10 or newer (`python3 --version`; if too old or missing, `brew install python`).
 2. Install the optional PDF tools: `brew install poppler tesseract ocrmypdf`. If one fails, carry on and tell me.
 3. In the current folder, run:
-   git clone https://github.com/Mohamad-Sobhie/Draftly.git my-thesis
+   git clone https://github.com/Mohamad-Sobhie/Otto.git my-thesis
 4. Run the setup script: `bash my-thesis/scripts/setup.sh`
    It creates a Python environment, installs packages and runs a self-test. Show me a short summary of the result: did the self-test pass?
 5. If anything failed, fix it and run the setup script again until the self-test passes.
@@ -39,7 +39,7 @@ Claude will ask for permission before running some commands. Approve them. If it
 1. Start a **new** Claude Code session and choose the **`my-thesis`** folder as its folder (not the starting folder from Step 1).
    - Desktop app: new session, then pick the folder `my-thesis`.
    - Terminal: `cd ~/Documents/my-thesis` then `claude`.
-2. When asked "Do you trust this folder?", say **yes**. This matters: Draftly's pre-approved permissions only work in a trusted folder, otherwise the student gets a permission prompt for everything.
+2. When asked "Do you trust this folder?", say **yes**. This matters: Otto's pre-approved permissions only work in a trusted folder, otherwise the student gets a permission prompt for everything.
 
 ## Step 4: First run (do this together with the student)
 
@@ -48,16 +48,16 @@ Claude will ask for permission before running some commands. Approve them. If it
 3. Add a first source: drag 2 or 3 PDFs into the chat and say **"add these"**.
 4. Say **"open my library"**. A library page opens in the browser. Bookmark it; the student just refreshes it after changes.
 
-That's it. From now on the student opens the `my-thesis` folder in Claude Code and talks normally. Typing **`menu`** always shows what Draftly can do.
+That's it. From now on the student opens the `my-thesis` folder in Claude Code and talks normally. Typing **`menu`** always shows what Otto can do.
 
 ---
 
-## Updating Draftly later
+## Updating Otto later
 
 Open the `my-thesis` folder in Claude Code and say:
 
 ```text
-Update Draftly: run `git pull` in this folder, then `bash scripts/setup.sh`, and tell me if the self-test passed.
+Update Otto: run `git pull` in this folder, then `bash scripts/setup.sh`, and tell me if the self-test passed.
 ```
 
 The student's brief, library, notes and drafts are never touched by an update.

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Turn a source (PDF, scanned PDF, .docx, .html/URL, .txt/.md) into page-marked,
-chapter-split markdown for the Draftly library.
+chapter-split markdown for the Otto library.
 
 Usage:
   ingest.py <input> [--id SOURCE_ID] [--store copy|move|none] [--force]

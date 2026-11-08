@@ -9,7 +9,7 @@ Usage:
                                            thesis-brief.md, using the last-sync snapshot to tell which
                                            side changed; --record saves a new snapshot (after approval)
   thesis_doc.py export <draft.md> [--name "..."]
-                                           save a Draftly draft as a new .docx in the folder
+                                           save a Otto draft as a new .docx in the folder
                                            (footnotes become numbered notes at the end)
 
 Prints one line of JSON.
@@ -50,11 +50,20 @@ def norm(title: str) -> str:
 
 # ------------------------------------------------------------------ find
 
+# Our exports carry "Otto" as a whole word (older ones say "Draftly"), so a
+# student's own "Motto.docx" or "Lottery regulation.docx" is never skipped.
+EXPORT_MARK = re.compile(r"\b(otto|draftly)\b", re.IGNORECASE)
+
+
+def is_export(name: str) -> bool:
+    return bool(EXPORT_MARK.search(name))
+
+
 def find_doc(root: Path) -> Path:
     folder = root / FOLDER
     folder.mkdir(exist_ok=True)  # older thesis folders may not have it yet
     docs = [p for p in folder.glob("*.docx")
-            if not p.name.startswith(("~$", ".")) and "draftly" not in p.name.lower()]
+            if not p.name.startswith(("~$", ".")) and not is_export(p.name)]
     if not docs:
         raise DocError("no_document", f'No Word document in "{FOLDER}" yet.')
     return max(docs, key=lambda p: p.stat().st_mtime)
@@ -357,10 +366,10 @@ def export(root: Path, src: Path, name: str | None) -> dict:
             add_runs(p, defs.get(key, "(missing footnote text)"), {})
     folder = root / FOLDER
     folder.mkdir(exist_ok=True)
-    stem = name or f"{src.stem} - Draftly {dt.date.today().isoformat()}"
+    stem = name or f"{src.stem} - Otto {dt.date.today().isoformat()}"
     stem = re.sub(r'[\\/:*?"<>|]', "-", stem)
-    if "draftly" not in stem.lower():
-        stem += " - Draftly"
+    if not is_export(stem):
+        stem += " - Otto"
     out = folder / f"{stem}.docx"
     k = 2
     while out.exists():

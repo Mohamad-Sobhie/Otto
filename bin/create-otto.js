@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-// Create or update a Draftly thesis folder.
+// Create or update a Otto thesis folder.
 //
-//   npx create-draftly my-thesis            new folder (or add Draftly to an existing one)
-//   npx create-draftly my-thesis --update   refresh skill, scripts and settings; keeps the student's work
-//   npx create-draftly my-thesis --no-setup copy files only, skip the Python setup
+//   npx create-otto my-thesis            new folder (or add Otto to an existing one)
+//   npx create-otto my-thesis --update   refresh skill, scripts and settings; keeps the student's work
+//   npx create-otto my-thesis --no-setup copy files only, skip the Python setup
 //
-// Without publishing: npx github:Mohamad-Sobhie/Draftly my-thesis
+// Without publishing: npx github:Mohamad-Sobhie/Otto my-thesis
 'use strict';
 
 const fs = require('fs');
@@ -44,7 +44,7 @@ Thumbs.db
 `;
 
 // Template files that --update may replace. Everything else (library, notes, drafts, brief) is the student's.
-const UPDATABLE = [/^\.claude\/skills\/draftly\//, /^\.claude\/settings\.json$/, /^scripts\//, /^CLAUDE\.md$/, /^README\.md$/];
+const UPDATABLE = [/^\.claude\/skills\/otto\//, /^\.claude\/settings\.json$/, /^scripts\//, /^CLAUDE\.md$/, /^README\.md$/];
 const SKIP = [/^bin\//, /^package\.json$/, /^node_modules\//, /^\.git\//, /^\.venv\//, /__pycache__/, /\.pyc$/,
   /^\.claude\/settings\.local\.json$/, /^library\.html$/, /^thesis-brief\.md$/, /^\.DS_Store$/];
 // Private content that may sit in a checkout of the template: only the empty placeholders are copied.
@@ -57,14 +57,14 @@ const warn = (m) => console.log(`  ${c.y}!${c.x} ${m}`);
 const die = (m) => { console.error(`  ${c.r}✗${c.x} ${m}`); process.exit(1); };
 
 function usage() {
-  console.log(`${c.b}create-draftly${c.x} - set up a Draftly thesis folder for Claude
+  console.log(`${c.b}create-otto${c.x} - set up a Otto thesis folder for Claude
 
 Usage:
-  npx create-draftly [folder]            create a new thesis folder (default: my-thesis),
-                                         or add Draftly to an existing folder without touching its files
-  npx create-draftly [folder] --update   refresh the skill, scripts and settings in a Draftly folder;
+  npx create-otto [folder]            create a new thesis folder (default: my-thesis),
+                                         or add Otto to an existing folder without touching its files
+  npx create-otto [folder] --update   refresh the skill, scripts and settings in a Otto folder;
                                          the library, notes, drafts and thesis brief are never touched
-  npx create-draftly [folder] --no-setup copy the files but skip the Python setup
+  npx create-otto [folder] --no-setup copy the files but skip the Python setup
 
 After setup: open the folder in the Claude app (Code), trust it, and type: menu`);
 }
@@ -132,7 +132,7 @@ function setup(target) {
   const bash = process.platform !== 'win32' || has('bash');
   if (bash) {
     const r = spawnSync('bash', ['scripts/setup.sh'], { cwd: target, stdio: 'inherit',
-      env: { ...process.env, DRAFTLY_INSTALLER: '1' } });
+      env: { ...process.env, OTTO_INSTALLER: '1' } });
     if (r.status !== 0) die('Setup failed - see the messages above.');
   } else {
     nodeSetup(target);
@@ -148,13 +148,13 @@ function main() {
   if (unknown.length) { usage(); die(`Unknown option: ${unknown.join(' ')}`); }
   const folder = args.find((a) => !a.startsWith('-')) || 'my-thesis';
   const target = path.resolve(process.cwd(), folder);
-  const isDraftly = fs.existsSync(path.join(target, '.claude', 'skills', 'draftly', 'SKILL.md'));
+  const isOtto = fs.existsSync(path.join(target, '.claude', 'skills', 'otto', 'SKILL.md'));
   const version = JSON.parse(fs.readFileSync(path.join(PKG_ROOT, 'package.json'), 'utf8')).version;
 
-  console.log(`${c.b}Draftly ${version}${c.x} ${c.d}→ ${target}${c.x}`);
-  if (path.resolve(target) === PKG_ROOT) die('That is the Draftly template itself. Choose another folder.');
-  if (update && !isDraftly) die('That folder is not a Draftly thesis folder yet. Run without --update to create it.');
-  if (!update && isDraftly) die(`That folder already has Draftly. To refresh it: npx create-draftly "${folder}" --update`);
+  console.log(`${c.b}Otto ${version}${c.x} ${c.d}→ ${target}${c.x}`);
+  if (path.resolve(target) === PKG_ROOT) die('That is the Otto template itself. Choose another folder.');
+  if (update && !isOtto) die('That folder is not a Otto thesis folder yet. Run without --update to create it.');
+  if (!update && isOtto) die(`That folder already has Otto. To refresh it: npx create-otto "${folder}" --update`);
   if (fs.existsSync(target) && !fs.statSync(target).isDirectory()) die('That path is a file, not a folder.');
 
   const files = walk(PKG_ROOT);

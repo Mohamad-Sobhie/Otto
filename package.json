@@ -1,17 +1,17 @@
 {
-  "name": "create-draftly",
+  "name": "create-otto",
   "version": "0.1.0",
-  "description": "Create a Draftly thesis folder: a Claude Code project that turns Claude into a thesis assistant.",
+  "description": "Create a Otto thesis folder: a Claude Code project that turns Claude into a thesis assistant.",
   "license": "MIT",
   "author": "Mohamad Sobhie",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Mohamad-Sobhie/Draftly.git"
+    "url": "git+https://github.com/Mohamad-Sobhie/Otto.git"
   },
-  "homepage": "https://github.com/Mohamad-Sobhie/Draftly#readme",
+  "homepage": "https://github.com/Mohamad-Sobhie/Otto#readme",
   "keywords": ["claude", "claude-code", "skill", "thesis", "dissertation", "oscola", "academic-writing"],
   "bin": {
-    "create-draftly": "bin/create-draftly.js"
+    "create-otto": "bin/create-otto.js"
   },
   "engines": {
     "node": ">=18"

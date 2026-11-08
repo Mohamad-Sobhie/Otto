@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Draftly one-time setup: Python venv, dependencies, folders, self-test.
+# Otto one-time setup: Python venv, dependencies, folders, self-test.
 # Safe to run again at any time (e.g. after updating the template).
 set -u
 
@@ -17,7 +17,7 @@ case "$(uname -s 2>/dev/null)" in
   *) OS=linux ;;
 esac
 
-bold "Draftly setup ($OS)"
+bold "Otto setup ($OS)"
 
 # 1. Python 3.10+ ------------------------------------------------------------
 PY=""
@@ -85,7 +85,7 @@ fi
 
 echo
 bold "All set."
-if [ -z "${DRAFTLY_INSTALLER:-}" ]; then
+if [ -z "${OTTO_INSTALLER:-}" ]; then
   echo "Next: open this folder in Claude Code and type:  menu"
   echo "      (first time: do the short setup questions together with the student)"
 fi

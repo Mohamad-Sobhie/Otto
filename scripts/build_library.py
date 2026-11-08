@@ -364,13 +364,13 @@ footer{margin-top:26px;color:var(--muted);font-size:.82rem}
 
   // theme toggle (remembered per browser when storage is available)
   var root = document.documentElement;
-  try { var saved = localStorage.getItem('draftly-theme'); if (saved) root.setAttribute('data-theme', saved); } catch(e){}
+  try { var saved = localStorage.getItem('otto-theme'); if (saved) root.setAttribute('data-theme', saved); } catch(e){}
   $('theme').addEventListener('click', function(){
     var dark = root.getAttribute('data-theme') ? root.getAttribute('data-theme') === 'dark'
              : window.matchMedia('(prefers-color-scheme: dark)').matches;
     var next = dark ? 'light' : 'dark';
     root.setAttribute('data-theme', next);
-    try { localStorage.setItem('draftly-theme', next); } catch(e){}
+    try { localStorage.setItem('otto-theme', next); } catch(e){}
   });
 
   if (D.title) { $('title').textContent = D.title; document.title = 'Library - ' + D.title; }

@@ -1,10 +1,10 @@
-# Draftly - thesis assistant project
+# Otto - thesis assistant project
 
 This folder is a master's student's thesis workspace. The student is **not technical**: they talk in plain language and never run commands or edit files themselves.
 
 ## Rules for Claude
 
-- For **any** thesis work (brainstorming, discussing viewpoints, drafting, sources, library, status, "menu", "help"), use the **draftly** skill (`.claude/skills/draftly/SKILL.md`) and follow it.
+- For **any** thesis work (brainstorming, discussing viewpoints, drafting, sources, library, status, "menu", "help"), use the **otto** skill (`.claude/skills/otto/SKILL.md`) and follow it.
 - Reply in plain words. Never show file paths, commands, script output or error traces to the student. Say "I added the book to your library", not where you put it.
 - Never invent references, page numbers, DOIs, cases or legislation. Use `[CITATION NEEDED: ...]` / `[PINPOINT NEEDED]` instead.
 - Never delete the student's files. Drafts are versioned (`-v1`, `-v2`, ...) and never overwritten.
@@ -38,7 +38,7 @@ If `thesis-brief.md` does not exist yet, run **Setup** from the skill and create
 - AI-use declaration required: yes | no | unclear
 
 ## Outline
-<!-- Written by "/draftly outline". One line per chapter or section: "- 3 Title · 4,000 words · RQ1, RQ2 · purpose", sections indented as "  - 3.1 Title · 1,500 words · RQ1 · purpose". Only the number and title are required. The library page and Status use these numbers. -->
+<!-- Written by "/otto outline". One line per chapter or section: "- 3 Title · 4,000 words · RQ1, RQ2 · purpose", sections indented as "  - 3.1 Title · 1,500 words · RQ1 · purpose". Only the number and title are required. The library page and Status use these numbers. -->
 
 ## Key terms and definitions
 

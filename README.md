@@ -1,4 +1,4 @@
-# Draftly
+# Otto
 
 A Claude Code project folder that turns Claude into a thesis assistant for a master's student: brainstorming, discussing viewpoints, drafting from the student's own points, and keeping a searchable library of sources with page-accurate citations.
 
@@ -6,7 +6,7 @@ The student never runs commands or edits files. They open the folder in Claude C
 
 Defaults are set for a UK law student (LLM) writing on UK/EU bank regulation and systemic risk from non-bank financial intermediaries (NBFIs), with OSCOLA citations. Everything is configurable for any field during the first-run setup.
 
-[![Draftly intro video (21 s)](media/draftly-intro.jpg)](media/draftly-intro.mp4)
+[![Otto intro video (21 s)](media/otto-intro.jpg)](media/otto-intro.mp4)
 
 *Click the image to watch the 21-second intro.*
 
@@ -23,7 +23,7 @@ Defaults are set for a UK law student (LLM) writing on UK/EU bank regulation and
 |---|---|
 | `CLAUDE.md` | Project rules for Claude + the thesis brief template. Imports `thesis-brief.md`. |
 | `thesis-brief.md` | The student's filled brief (created at first run, git-ignored). |
-| `.claude/skills/draftly/` | The skill: `SKILL.md` + `references/perspectives.md` (the five Discuss lenses and the schools-of-thought presets) and `references/citation-styles.md` (OSCOLA, APA 7, Harvard). |
+| `.claude/skills/otto/` | The skill: `SKILL.md` + `references/perspectives.md` (the five Discuss lenses and the schools-of-thought presets) and `references/citation-styles.md` (OSCOLA, APA 7, Harvard). |
 | `.claude/settings.json` | Pre-approved permissions so the student isn't flooded with prompts. |
 | `scripts/ingest.py` | PDF / scanned PDF / .docx / web page / text → page-marked, chapter-split markdown. |
 | `scripts/build_library.py` | `references/INDEX.md` → `library.html` (offline, searchable, with a gap panel). |
@@ -34,7 +34,7 @@ Defaults are set for a UK law student (LLM) writing on UK/EU bank regulation and
 | `references/inbox/` | Drop files here to have Claude add them. |
 | `references/pdf/`, `references/text/` | Original files and extracted text (git-ignored). |
 | `notes/`, `sessions/`, `drafts/` | Reading notes, brainstorm/discussion records, versioned drafts (git-ignored). |
-| `My Thesis Drafts/` | The student's own Word document. Read-only for Claude; Draftly's exports go in as new files with "Draftly" in the name (git-ignored). |
+| `My Thesis Drafts/` | The student's own Word document. Read-only for Claude; Otto's exports go in as new files with "Otto" in the name (git-ignored). |
 | `scripts/thesis_doc.py` | Reads the student's Word document (headings, words, sections, footnotes), syncs it with the outline, exports drafts to `.docx`. |
 | `library.html` | Generated library page (git-ignored). |
 
@@ -53,28 +53,28 @@ Defaults are set for a UK law student (LLM) writing on UK/EU bank regulation and
 **Option A: one command with npx** (needs [Node.js](https://nodejs.org) 18+; no git needed)
 
 ```bash
-npx github:Mohamad-Sobhie/Draftly my-thesis
+npx github:Mohamad-Sobhie/Otto my-thesis
 ```
 
-Once the package is published to npm, this also works: `npx create-draftly my-thesis` (or `npm init draftly my-thesis`).
+Once the package is published to npm, this also works: `npx create-otto my-thesis` (or `npm init otto my-thesis`).
 
-It creates the `my-thesis` folder, copies the template in and runs the setup below. Pointing it at an **existing** folder (e.g. one that already holds the student's abstract) adds Draftly without touching any file that's already there. `--no-setup` copies the files only.
+It creates the `my-thesis` folder, copies the template in and runs the setup below. Pointing it at an **existing** folder (e.g. one that already holds the student's abstract) adds Otto without touching any file that's already there. `--no-setup` copies the files only.
 
 **Option B: git** (makes updates a simple `git pull`)
 
 ```bash
-git clone https://github.com/Mohamad-Sobhie/Draftly.git draftly
-cd draftly
+git clone https://github.com/Mohamad-Sobhie/Otto.git otto
+cd otto
 bash scripts/setup.sh
 ```
 
-To add Draftly to an existing folder with git: `git init -b main && git remote add origin https://github.com/Mohamad-Sobhie/Draftly.git && git pull origin main`, then `bash scripts/setup.sh`.
+To add Otto to an existing folder with git: `git init -b main && git remote add origin https://github.com/Mohamad-Sobhie/Otto.git && git pull origin main`, then `bash scripts/setup.sh`.
 
 The setup script creates a local `.venv`, installs the Python packages, checks for poppler/tesseract (prints install hints, doesn't fail without them), creates any missing folders, and runs a self-test (it generates a tiny PDF, ingests it, builds a library page, checks the result, then cleans up). It ends with: *Open this folder in Claude Code and type menu*.
 
 ### First run (do this together with the student)
 
-1. Open the `draftly` folder in Claude Code.
+1. Open the `otto` folder in Claude Code.
 2. Type `menu`. Claude notices there's no thesis brief yet and asks the setup questions in one message (field, university, title, research questions, method, language, citation style, stage and deadline, word limit, AI-use rules, optional outline and bibliography).
 3. Let the student answer in their own words. Claude writes `thesis-brief.md`.
    - Encourage them to give a numbered outline (e.g. `3.1 Entity-based regulation`). The library page uses it to show which sections have no sources yet.
@@ -111,7 +111,7 @@ If the student wants version history of their own work, make a **private** copy:
 **Installed with npx:** from the folder that contains the thesis folder:
 
 ```bash
-npx "github:Mohamad-Sobhie/Draftly#main" my-thesis --update
+npx "github:Mohamad-Sobhie/Otto#main" my-thesis --update
 ```
 
 It replaces only the skill, scripts, settings, `CLAUDE.md` and `README.md`, then re-runs the setup. The library, notes, sessions, drafts, thesis brief and `settings.local.json` are never touched. (The `#main` makes npx fetch the latest version rather than a cached one; keep the quotes, since some shells treat `#` as a comment.)
@@ -123,13 +123,13 @@ git pull
 bash scripts/setup.sh
 ```
 
-(If they use a private copy, add this template as a second remote: `git remote add template https://github.com/Mohamad-Sobhie/Draftly.git`, then `git pull template main`.) Their brief, library, notes and drafts are git-ignored, so updates never touch them. Re-running `setup.sh` is safe.
+(If they use a private copy, add this template as a second remote: `git remote add template https://github.com/Mohamad-Sobhie/Otto.git`, then `git pull template main`.) Their brief, library, notes and drafts are git-ignored, so updates never touch them. Re-running `setup.sh` is safe.
 
-To customise: edit `.claude/skills/draftly/SKILL.md` (keep it under ~500 lines), add field presets to `references/perspectives.md`, citation rules to `references/citation-styles.md`, or change the house style in `references/writing-style.md`.
+To customise: edit `.claude/skills/otto/SKILL.md` (keep it under ~500 lines), add field presets to `references/perspectives.md`, citation rules to `references/citation-styles.md`, or change the house style in `references/writing-style.md`.
 
 ### Publishing the npx installer (optional)
 
-The repo is also the npm package `create-draftly` (`package.json` + `bin/create-draftly.js`). To publish a version: bump `version` in `package.json`, run `npm publish` (needs an npm account; `npm login` first). `npx github:...` works without publishing. npm never ships `.gitignore`, so the installer carries its own copy; the self-test checks it still matches the repo's `.gitignore`.
+The repo is also the npm package `create-otto` (`package.json` + `bin/create-otto.js`). To publish a version: bump `version` in `package.json`, run `npm publish` (needs an npm account; `npm login` first). `npx github:...` works without publishing. npm never ships `.gitignore`, so the installer carries its own copy; the self-test checks it still matches the repo's `.gitignore`.
 
 ### Script reference (for you, not the student)
 
@@ -148,11 +148,11 @@ The repo is also the npm package `create-draftly` (`package.json` + `bin/create-
 
 ## Part 2: Student guide
 
-**Draftly is your thesis assistant.** You talk to it in normal sentences. It keeps your sources, notes and drafts organised for you.
+**Otto is your thesis assistant.** You talk to it in normal sentences. It keeps your sources, notes and drafts organised for you.
 
 ### Opening it
 
-Open the **Claude** app, go to **Code**, and open your **draftly** thesis folder. (Your setup person will show you once.) Then type **menu**.
+Open the **Claude** app, go to **Code**, and open your **otto** thesis folder. (Your setup person will show you once.) Then type **menu**.
 
 ### The six things it does
 
@@ -166,19 +166,19 @@ Open the **Claude** app, go to **Code**, and open your **draftly** thesis folder
 3. ✍️ **Write**: turns **your** points into a draft, or polishes your own text. *"Here are my points for 3.2, draft it."* Before writing, Claude shows a short plan (one line per paragraph, with the sources it will use) and waits for you to say **go**. Every draft is saved as a new version, so nothing is lost, and opens beside the chat so you can read it while you talk. Drafts are written plainly and precisely, without AI-sounding filler, and each one ends with a short style check.
 4. 📚 **Library**: your sources. *"What do my sources say about liquidity mismatch?"*
 5. 📋 **Status**: where you are, what's missing, what to do next. *"Where am I?"*
-6. 🗂️ **Outline**: plans your table of contents from your abstract (two options, with word budgets and which sources cover each section), and lets you change it any time. Type *"/draftly outline"* again later and it opens your outline as an editable board: change titles and word budgets, move, add or remove sections, then copy your changes into the chat. You can also just say *"merge 2.1 and 2.2"*.
+6. 🗂️ **Outline**: plans your table of contents from your abstract (two options, with word budgets and which sources cover each section), and lets you change it any time. Type *"/otto outline"* again later and it opens your outline as an editable board: change titles and word budgets, move, add or remove sections, then copy your changes into the chat. You can also just say *"merge 2.1 and 2.2"*.
 
-You don't have to use the menu: just say what you need. Type **/draftly help** for the basics, or **/draftly help all** for everything you can ask, with examples.
+You don't have to use the menu: just say what you need. Type **/otto help** for the basics, or **/otto help all** for everything you can ask, with examples.
 
 ### Your own Word document
 
-Write your thesis in Word as usual, and keep the file in the **My Thesis Drafts** folder inside your thesis folder. Draftly only **reads** it and never changes it. Then you can ask:
+Write your thesis in Word as usual, and keep the file in the **My Thesis Drafts** folder inside your thesis folder. Otto only **reads** it and never changes it. Then you can ask:
 - *"How many words have I written?"*: per chapter, against your outline.
 - *"Review 2.2 in my thesis"*: feedback on what you wrote.
 - *"Polish 2.2 from my thesis"*: a cleaned-up copy as a new Word file, so you can choose what to take.
-- *"Sync my outline"*: if you renamed or added sections in Word, Draftly spots it and updates your outline (after you say go).
+- *"Sync my outline"*: if you renamed or added sections in Word, Otto spots it and updates your outline (after you say go).
 
-Use Word's **Heading 1** for chapters and **Heading 2** for sections so Draftly can follow your structure.
+Use Word's **Heading 1** for chapters and **Heading 2** for sections so Otto can follow your structure.
 
 ### Adding a source
 
