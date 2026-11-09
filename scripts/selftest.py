@@ -295,6 +295,32 @@ def quick(tmp: Path, results: list) -> None:
     ag.write_text(json.dumps(agree), encoding="utf-8")
     check(any("agrees instead of objecting" in c for c in run("build_discussion.py", str(ag), "--root", str(root)).get("checks") or []),
           "an objection that agrees is reported", results)
+    mm = root / "sessions" / "mindmap.json"
+    mm.write_text(json.dumps({"centre": "NBFI risk: banks or directly?", "branches": [
+        {"title": "Angles", "ideas": [
+            {"id": "a1", "text": "Regulate activity, not entities", "by": "student", "sources": ["testauthor-2024-shadow"]},
+            {"id": "a2", "text": "Priced backstop <b>as</b> the main tool, with a second line", "by": "otto", "needed": "BoE paper"},
+            {"id": "a3", "text": "Old idea", "by": "student", "status": "dropped"}]},
+        {"title": "Possible gaps", "ideas": [
+            {"id": "b1", "text": "To check: reach over Irish funds", "by": "otto", "wild": True, "sources": ["nobody-2099-fake"]}]}]}),
+        encoding="utf-8")
+    m = run("build_mindmap.py", str(mm), "--root", str(root), "--chat")
+    mc = Path(m.get("chat") or "")
+    msvg = (mc if mc.is_absolute() else root / mc).read_text() if m.get("chat") else ""
+    mpage = mm.with_suffix(".html").read_text() if mm.with_suffix(".html").exists() else ""
+    check(m.get("ok") and m.get("ideas") == 3 and m.get("dropped") == 1 and msvg.startswith("<svg")
+          and msvg.count('class="c-teal"><rect') == 1 and msvg.count('class="c-gray"><rect') == 2
+          and "Old idea" not in msvg and "Old idea" in mpage and "Set aside" in mpage,
+          "mind map drawn from the record (dropped ideas only on the page)", results)
+    check(msvg.count('circle class="c-green"') == 1 + 1 and msvg.count('circle class="c-amber"') == 2 + 1
+          and m.get("unknown_sources") == ["nobody-2099-fake"] and "&lt;b&gt;" in msvg and "<b>as</b>" not in msvg,
+          "mind map library dots: only library sources show green", results)
+    mm.write_text(json.dumps({"centre": "", "branches": [{"title": "A very long branch title here", "ideas": [
+        {"id": "x", "text": "t", "by": "me"}, {"id": "x", "text": "u" * 80, "by": "otto", "status": "maybe"}]}]}), encoding="utf-8")
+    bad_m = run("build_mindmap.py", str(mm), "--root", str(root)).get("checks") or []
+    check(all(any(k in c for c in bad_m) for k in ("no centre", "1 branches", "longer than 18", "used twice",
+                                                   "longer than 58", "student or otto", "unknown status")),
+          "mind map problems are reported", results)
     thin = dict(full, perspectives=[
         {"key": "practitioner", "position": "This is a complex issue with various factors.",
          "arguments": [dict(arg("practitioner", 1), objection={"by": "practitioner", "text": "x"})]},

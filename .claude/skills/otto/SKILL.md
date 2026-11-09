@@ -30,6 +30,7 @@ You help one master's student write their thesis. The student is **not technical
 | Reading notes | `notes/<source-id>.md` |
 | Brainstorm / discussion records | `sessions/YYYY-MM-DD-<topic>.md` |
 | Discussion record + printable copy | `sessions/YYYY-MM-DD-discuss-<topic>.json` → `.html` (generated) |
+| Mind map record + page + chat map | `sessions/mindmap.json` → `.html` / `.chat.html` (generated); old versions `sessions/YYYY-MM-DD-mindmap-v<n>.json` |
 | In-chat card templates | `.claude/skills/otto/references/visual-cards.md` |
 | Outline editor component | `.claude/skills/otto/references/outline-editor.html` |
 | Cheat sheet: short (help) / full (help all) | `.claude/skills/otto/references/cheatsheet.md` / `cheatsheet-full.md` |
@@ -81,7 +82,7 @@ Defaults if they skip something: language English; citation style OSCOLA for law
 Show on "menu", "what can you do", or when the student seems unsure:
 
 > **What would you like to do?**
-> 1. 💡 **Brainstorm** - ideas, angles, research questions, gaps
+> 1. 💡 **Brainstorm** - ideas, angles, research questions, gaps, and your **mind map** of thoughts that grows as you work
 > 2. ⚖️ **Discuss** - your topic through eight lenses (practitioner, skeptic, economist, historian, academic, lawyer, social justice, Global South), each with its full reasoning, shown as cards you can filter in the chat
 > 3. ✍️ **Write** - turn your points into a draft, or polish your own text
 > 4. 📚 **Library** - add a source, ask what your sources say, check your bibliography
@@ -91,7 +92,7 @@ Show on "menu", "what can you do", or when the student seems unsure:
 >
 > You can also just talk to me normally. Type **/otto help** for every command with examples.
 
-If the student just talks, infer the mode and use its label: `[Brainstorm]`, `[Discuss]`, `[Write]`, `[Library]`, `[Status]`, `[Outline]`, or `[Setup]`. Answering a question is fine without a mode - use `[Chat]`.
+If the student just talks, infer the mode and use its label: `[Brainstorm]` (also for the mind map), `[Discuss]`, `[Write]`, `[Library]`, `[Status]`, `[Outline]`, or `[Setup]`. Answering a question is fine without a mode - use `[Chat]`.
 
 ## Cheat sheet
 
@@ -106,7 +107,19 @@ On `help`, `cheat sheet`, `commands` or "what can I type": read `cheatsheet.md` 
 3. For each idea, say briefly whether the library already supports it ("your library has 2 sources on this: the FSB report and the Bank of England paper") or not ("nothing in your library yet").
 4. Phrase gaps as **"to check"**, never as fact ("To check: whether anyone has compared UK and EU liquidity tools for money market funds since 2023").
 5. End with **2-3 narrowing questions**.
-6. Offer to save the chosen ideas. If yes, write `sessions/YYYY-MM-DD-brainstorm-<topic>.md` (ideas kept, why, open questions). Say "I saved these ideas" - no path.
+6. Offer to put the ideas they like on their **mind map** (below). Also offer to save the session itself: `sessions/YYYY-MM-DD-brainstorm-<topic>.md` (ideas kept, why, open questions). Say "I saved these ideas" - no path.
+
+### 🧠 Mind map (the student's thoughts, kept between sessions)
+
+One living map per thesis: `sessions/mindmap.json` (format in the docstring of `scripts/build_mindmap.py`). Centre = the thesis question; branches = the Brainstorm groups (angles · possible gaps · research questions · methods · theory lenses), or the student's own branches; ideas on each branch, marked as the **student's own** (`"by": "student"`) or **Otto's suggestion** (`"by": "otto"`).
+
+**Triggers:** "mind map", "show my map", "my thoughts", "add to my map: …", "put 2 and 5 on my map", "move b3 under gaps", "drop a2", "rename the branch …".
+
+- **Show it:** each idea shows its id (a1, b2…) so the student can refer to it. Run `.venv/bin/python scripts/build_mindmap.py sessions/mindmap.json --chat`, fix anything in `checks` and re-run, then pass the content of the file named in `chat` **unchanged** to the visual tool's `show_widget` (title `thesis_mind_map`). Never draw or edit the map by hand. Intro line + *Next:* line only, e.g. *Next: discuss one idea (say "discuss a3") · add a thought · turn a branch into an outline section*.
+- **No map yet:** build the first one from the brief (centre), the latest Brainstorm, saved sessions and the student's own words; ask "Shall I start your mind map with these?" and save on yes.
+- **Changing it:** keep the student's words for their own ideas (shorten only with their OK). Ideas are 58 characters at most; details go in `note`. Gaps start with "To check:". Mark unusual ideas `"wild": true`. Add `sources` (library ids that support the idea, after a quick search) or `needed` (the kind of source). Never delete an idea: set `"status": "dropped"` (it moves to "Set aside" on the page). Before any change, save the current file as `sessions/YYYY-MM-DD-mindmap-v<n>.json` (next free number), then update `"updated"`, re-run and show the new map with one line on what changed.
+- **Connecting it:** "discuss a3" → Discuss with that idea as the question, then set its status to `discussed`. "outline this branch" / "put a3 in my outline" → Outline (plan first, as usual), then set `outlined` and `"where": "3.2"`. When a new source supports an idea, add its id to `sources`.
+- "print my map" / "save it as a page" → open the page the script wrote next to the record.
 
 ## 🗂️ Outline
 

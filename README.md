@@ -33,7 +33,7 @@ Defaults are set for a UK law student (LLM) writing on UK/EU bank regulation and
 | `references/INDEX.md` | The library map Claude maintains. |
 | `references/inbox/` | Drop files here to have Claude add them. |
 | `references/pdf/`, `references/text/` | Original files and extracted text (git-ignored). |
-| `notes/`, `sessions/`, `drafts/` | Reading notes, brainstorm/discussion records, versioned drafts (git-ignored). |
+| `notes/`, `sessions/`, `drafts/` | Reading notes, brainstorm/discussion records and the mind map, versioned drafts (git-ignored). |
 | `My Thesis Drafts/` | The student's own Word document. Read-only for Claude; Otto's exports go in as new files with "Otto" in the name (git-ignored). |
 | `scripts/thesis_doc.py` | Reads the student's Word document (headings, words, sections, footnotes), syncs it with the outline, exports drafts to `.docx`. |
 | `library.html` | Generated library page (git-ignored). |
@@ -157,6 +157,8 @@ Open the **Claude** app, go to **Code**, and open your **otto** thesis folder. (
 ### The six things it does
 
 1. 💡 **Brainstorm**: ideas, angles, research questions and possible gaps. *"Brainstorm angles for chapter 3."*
+
+   🧠 Your **mind map** keeps your thoughts between sessions: the thesis question in the middle, branches for angles, gaps, questions, methods and theory, and your own ideas (teal) next to Otto's suggestions (grey), with a green or amber dot showing whether your library already supports each one. Say *"show my map"*, *"add to my map: …"*, or *"discuss a3"* to take an idea into Discuss.
 2. ⚖️ **Discuss**: your topic through eight lenses: 🟦 the Practitioner, 🟥 the Skeptic, 🟩 the Economist, 🟨 the Historian, 🟪 the Academic, 🔷 the Lawyer, 🩷 Social justice and 🟧 the Global South. Each gives its position and 3–4 arguments, shown as colour-coded cards right in the chat. Tap a lens to hide it, or open **Show full reasoning** to see, for every argument, what it rests on, what it assumes, its weak point and the strongest objection from another lens. You also see where they clash, what examiners might ask, and one recommended next step. Say *"save it as a page"* if you want a copy to keep or print. *"Discuss whether NBFIs should be regulated directly."* You can also say *"debate the Skeptic and the Historian"*, *"play the examiner"*, or *"use schools of thought instead"*.
 
    Then take it further, step by step (each step appears as new cards in the chat):

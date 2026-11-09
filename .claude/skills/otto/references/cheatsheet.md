@@ -8,8 +8,15 @@
 | edit on the board, then **Copy changes** and paste | your edits, shown for checking, saved on **go** |
 | `/otto outline: [change]` | or just say it: `merge 2.1 and 2.2` · `give chapter 3 500 more words` |
 
+### 🧠 Your mind map
+| Type | You get |
+|---|---|
+| `/otto show my map` | your thoughts as a mind map: your ideas and Otto's, grouped in branches |
+| `add to my map: [your thought]` | adds it (say *under gaps* to choose the branch) |
+| `discuss a3` | takes idea a3 into Discuss |
+
 ### ⚖️ Discuss your question
-🟦 Practitioner · 🟥 Skeptic · 🟩 Economist · 🟨 Historian · 🟪 Academic
+🟦 Practitioner · 🟥 Skeptic · 🟩 Economist · 🟨 Historian · 🟪 Academic · 🔷 Lawyer · 🩷 Social justice · 🟧 Global South
 
 | Type | You get |
 |---|---|

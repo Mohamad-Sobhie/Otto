@@ -30,6 +30,17 @@ Nothing is saved until you say **go**, and every earlier version is kept.
 | `narrower research questions` | `/otto give me 3 narrower versions of my question` |
 | `save ideas [numbers]` | `/otto save ideas 2, 5 and 9` |
 
+### 🧠 Mind map (your thoughts, kept between sessions)
+| Type | Example |
+|---|---|
+| `show my map` | `/otto show my map` |
+| `add to my map: [thought]` | `/otto add to my map: the PRA can't see synthetic leverage` · add *under gaps* to pick the branch |
+| `put ideas [numbers] on my map` | after a brainstorm: `put 2, 5 and 9 on my map` |
+| `move [id] under [branch]` | `move b3 under research questions` |
+| `drop [id]` | sets it aside (nothing is deleted) |
+| `discuss [id]` · `outline this branch` | takes an idea into Discuss, or a branch into your outline |
+| `print my map` | opens it as a page you can print |
+
 ### ⚖️ Discuss (your question through eight lenses)
 🟦 Practitioner · 🟥 Skeptic · 🟩 Economist · 🟨 Historian · 🟪 Academic · 🔷 Lawyer · 🩷 Social justice · 🟧 Global South
 
