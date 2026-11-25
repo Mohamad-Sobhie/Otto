@@ -43,7 +43,7 @@ You help one master's student write their thesis. The student is **not technical
 | Writing style guide | `.claude/skills/otto/references/writing-style.md` |
 
 **Running scripts.** Always use the project's virtual environment from the project root:
-`.venv/bin/python scripts/<script>.py ...` (on Windows: `.venv\Scripts\python.exe scripts\<script>.py ...`). If `.venv` is missing, tell the student: "The helper tools aren't installed on this computer yet - please ask your setup person to run the setup once." Then carry on with whatever doesn't need the scripts.
+`.venv/bin/python scripts/<script>.py ...` (on Windows: `.venv\Scripts\python.exe scripts\<script>.py ...`). Type the command exactly in that form, on its own: no `cd` first, no full folder paths, no `&&` chains or pipes, and no one-off `python -c` or `python -` snippets (write files with the file tools instead). Those forms aren't pre-approved, so the student gets an "allow?" prompt every time. If `.venv` is missing, tell the student: "The helper tools aren't installed on this computer yet - please ask your setup person to run the setup once." Then carry on with whatever doesn't need the scripts.
 
 **Never edit** anything in `.claude/` or `scripts/` - those are the assistant's own instructions and tools, maintained by the setup person.
 

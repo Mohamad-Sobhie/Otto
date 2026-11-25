@@ -7,7 +7,7 @@ an SVG for the visual tool's show_widget - pass its content unchanged. Prints on
 
 Input format:
 {
-  "centre": "NBFI risk: banks or directly?",        the thesis question or topic (2 lines max)
+  "centre": "NBFI risk: banks or directly?",        the thesis question or topic (4 short lines max, ~70 characters)
   "updated": "2026-11-09",                          (optional, default today)
   "branches": [                                     2-6 branches, in display order
     {"title": "Angles",                             short: 18 characters at most
@@ -45,6 +45,7 @@ from build_discussion import library_ids  # noqa: E402  (same INDEX.md reading a
 
 MAX_BRANCHES, MAX_IDEAS = 6, 6
 MAX_TITLE, LINE, MAX_TEXT = 18, 29, 58
+CENTRE_LINES = 4
 STATUSES = {"open", "discussed", "outlined", "dropped"}
 
 
@@ -52,8 +53,8 @@ def esc(s) -> str:
     return html.escape(str(s or ""), quote=True)
 
 
-def wrap(text: str, width: int = LINE) -> list[str]:
-    """Split into at most two lines of ~width characters, on word boundaries."""
+def wrap(text: str, width: int = LINE, most: int = 2) -> list[str]:
+    """Split into at most `most` lines of ~width characters, on word boundaries."""
     words, lines, cur = (text or "").split(), [], ""
     for w in words:
         if cur and len(cur) + 1 + len(w) > width:
@@ -63,10 +64,10 @@ def wrap(text: str, width: int = LINE) -> list[str]:
             cur = f"{cur} {w}".strip()
     if cur:
         lines.append(cur)
-    if len(lines) > 2:
-        lines = [lines[0], " ".join(lines[1:])]
-        if len(lines[1]) > width:
-            lines[1] = lines[1][: width - 1].rstrip() + "…"
+    if len(lines) > most:
+        lines = lines[: most - 1] + [" ".join(lines[most - 1:])]
+        if len(lines[-1]) > width:
+            lines[-1] = lines[-1][: width - 1].rstrip() + "…"
     return lines or [""]
 
 
@@ -75,6 +76,8 @@ def check(data: dict, ids: set[str]) -> tuple[list[str], list[str]]:
     branches = data.get("branches") or []
     if not (data.get("centre") or "").strip():
         checks.append("no centre (the thesis question or topic)")
+    elif wrap(data["centre"], 18, 99)[CENTRE_LINES:]:
+        checks.append(f"centre is too long for {CENTRE_LINES} lines - shorten it (the page shows it in full)")
     if not 2 <= len(branches) <= MAX_BRANCHES:
         checks.append(f"{len(branches)} branches - use 2-{MAX_BRANCHES}")
     for b in branches:
@@ -128,7 +131,7 @@ def chat_svg(data: dict, ids: set[str]) -> str:
         y += 14
     bottom = y - 22
     mid = (30 + bottom) / 2
-    centre = wrap(data.get("centre") or "", 18)
+    centre = wrap(data.get("centre") or "", 18, CENTRE_LINES)
     out = []
     lines_svg, nodes = [], []
     branch_c = []
@@ -141,13 +144,11 @@ def chat_svg(data: dict, ids: set[str]) -> str:
     for c in branch_c:
         lines_svg.append(f'<path d="M180 {mid:.0f} C198 {mid:.0f} 197 {c:.0f} 215 {c:.0f}"/>')
     out.append('<g fill="none" stroke="#888780" stroke-width="1" opacity="0.6">' + "".join(lines_svg) + "</g>")
-    ch = 56 if len(centre) > 1 else 40
+    ch = 20 * len(centre) + 16
     out.append(f'<g class="c-purple"><rect x="30" y="{mid - ch / 2:.0f}" width="150" height="{ch}" rx="8" stroke-width="0.5"/>')
-    if len(centre) > 1:
-        out.append(f'<text class="th" x="105" y="{mid - 10:.0f}" text-anchor="middle" dominant-baseline="central">{esc(centre[0])}</text>'
-                   f'<text class="th" x="105" y="{mid + 10:.0f}" text-anchor="middle" dominant-baseline="central">{esc(centre[1])}</text></g>')
-    else:
-        out.append(f'<text class="th" x="105" y="{mid:.0f}" text-anchor="middle" dominant-baseline="central">{esc(centre[0])}</text></g>')
+    first = mid - 10 * (len(centre) - 1)
+    out.append("".join(f'<text class="th" x="105" y="{first + 20 * k:.0f}" text-anchor="middle" dominant-baseline="central">{esc(t)}</text>'
+                       for k, t in enumerate(centre)) + "</g>")
     for (b, items), c in zip(rows, branch_c):
         nodes.append(f'<g class="c-purple"><rect x="215" y="{c - 18:.0f}" width="150" height="36" rx="8" stroke-width="0.5"/>'
                      f'<text class="th" x="290" y="{c:.0f}" text-anchor="middle" dominant-baseline="central">{esc(b.get("title"))}</text></g>')

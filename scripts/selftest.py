@@ -410,6 +410,19 @@ def installer_gitignore(results: list) -> None:
     check(bool(m) and m.group(1) == gi.read_text(encoding="utf-8"), "installer's .gitignore matches the repo's", results)
 
 
+def allowed_scripts(results: list) -> None:
+    """Every helper script must be pre-approved, or the student gets an "allow?" prompt each run."""
+    sf = HERE.parent / ".claude" / "settings.json"
+    if not sf.exists():
+        return
+    allow = set(json.loads(sf.read_text(encoding="utf-8")).get("permissions", {}).get("allow", []))
+    missing = [f.name for f in sorted(HERE.glob("*.py"))
+               if f"Bash(.venv/bin/python scripts/{f.name}:*)" not in allow
+               or f"Bash(.venv\\Scripts\\python.exe scripts\\{f.name}:*)" not in allow]
+    check(not missing, "every helper script is pre-approved" + (f" (missing: {', '.join(missing)})" if missing else ""), results)
+    check({"mcp__visualize__show_widget", "mcp__visualize__read_me"} <= allow, "chat visuals are pre-approved", results)
+
+
 def word_thesis(tmp: Path, results: list) -> None:
     """The student's own Word document: read-only reading, sync direction, export."""
     import docx
@@ -477,6 +490,7 @@ def main() -> int:
         print("Otto self-test")
         quick(tmp, results)
         installer_gitignore(results)
+        allowed_scripts(results)
         if args.full:
             full(tmp, results)
             word_thesis(tmp, results)
