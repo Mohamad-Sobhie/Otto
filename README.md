@@ -172,6 +172,8 @@ Open the **Claude** app, go to **Code**, and open your **otto** thesis folder. (
 
 You don't have to use the menu: just say what you need. Type **/otto help** for the basics, or **/otto help all** for everything you can ask, with examples.
 
+🧭 **Feeling lost?** Type **/otto lost**. Otto checks how far you've got (brief, ideas, outline, sources, discussions, drafts), shows it as a simple path with a "you are here" marker, reminds you what you did last time, and gives one clear next step with the exact words to type. *"I'm stuck"* or *"what now?"* works too.
+
 ### Your own Word document
 
 Write your thesis in Word as usual, and keep the file in the **My Thesis Drafts** folder inside your thesis folder. Otto only **reads** it and never changes it. Then you can ask:

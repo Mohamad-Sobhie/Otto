@@ -1,5 +1,7 @@
 # 📖 Otto: the basics
 
+🧭 **Not sure where you are?** Type `/otto lost`: Otto shows how far you've got and the one thing to do next.
+
 ### 🗂️ Plan your table of contents
 | Type | You get |
 |---|---|

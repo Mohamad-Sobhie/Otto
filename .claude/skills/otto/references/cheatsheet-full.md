@@ -7,7 +7,8 @@ Type any of these, with or without `/otto` in front. Plain sentences work too.
 |---|---|
 | `/otto help` | the short version |
 | `/otto help all` | this full list |
-| `/otto menu` | the 5 main options |
+| `/otto menu` | the 6 main options |
+| `/otto lost` | 🧭 where you are on the thesis path, and the one thing to do next |
 | `/otto where am I?` | 📋 status: deadline, sources, drafts, gaps, next steps |
 | `/otto what should I do this week?` | 1–3 next steps for the time left |
 
@@ -98,4 +99,4 @@ Tip: use Word's **Heading 1** for chapters and **Heading 2** for sections, so Ot
 ### Good to know
 - **[CITATION NEEDED]** = a source is still missing · **[PINPOINT NEEDED]** = the page is missing. Claude never invents references.
 - 🟢 green tag = backed by your library · 🟠 amber tag = still needs a source.
-- Unsure? Just describe what you want in your own words.
+- Unsure? Type `lost`, or just describe what you want in your own words.
